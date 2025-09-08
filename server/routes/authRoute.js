@@ -1,16 +1,26 @@
-import express from "express";
+import { Router } from "express";
 import {
   register,
   login,
   registerPetugas,
 } from "../controllers/authController.js";
-import authMiddleware from "../middleware/authMiddleware.js";
+import {
+  validateRegister,
+  validateLogin,
+  validatePetugas,
+} from "../middleware/validateInputMiddleware.js";
+import  authMiddleware  from "../middleware/authMiddleware.js";
 
-const roles = authMiddleware;
-const router = express.Router();
+const router = Router();
 
-router.post("/register", register);
-router.post("/login", login);
-router.post("/register-petugas", roles(["admin"]), registerPetugas);
+router.post("/register", validateRegister, register);
+router.post("/login", validateLogin, login);
+router.post(
+  "/register-petugas",
+  authMiddleware(["admin"]),
+  validateRegister,
+  validatePetugas,
+  registerPetugas
+);
 
 export default router;

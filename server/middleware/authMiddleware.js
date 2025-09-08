@@ -14,7 +14,6 @@ const authMiddleware = (roles = []) => {
         return res.status(403).json({ message: "Token tidak valid" });
       }
 
-      // Cek role
       if (roles.length && !roles.includes(decoded.role)) {
         return res.status(403).json({ message: "Akses ditolak" });
       }
