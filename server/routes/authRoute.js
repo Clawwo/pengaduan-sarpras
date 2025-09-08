@@ -3,7 +3,7 @@ import {
   register,
   login,
   registerPetugas,
-} from "../controllers/authControllers.js";
+} from "../controllers/authController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const roles = authMiddleware;

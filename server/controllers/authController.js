@@ -6,6 +6,17 @@ export const register = async (req, res) => {
   try {
     const { username, password, nama_pengguna } = req.body;
 
+    // Validasi input
+    if (!username || username.length < 3) {
+      return res.status(400).json({ message: "Username minimal 3 karakter" });
+    }
+    if (!password || password.length < 8) {
+      return res.status(400).json({ message: "Password minimal 8 karakter" });
+    }
+    if (!nama_pengguna || nama_pengguna.trim() === "") {
+      return res.status(400).json({ message: "Nama pengguna wajib diisi" });
+    }
+
     const [checkUser] = await pool.query(
       "SELECT * FROM pengaduan_sarpras_user WHERE username = ?",
       [username]
@@ -32,18 +43,25 @@ export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    // Validasi input
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ message: "Username dan password wajib diisi" });
+    }
+
     const [rows] = await pool.query(
       "SELECT * FROM pengaduan_sarpras_user WHERE username = ?",
       [username]
     );
     if (rows.length === 0) {
-      return res.status(400).json({ message: "User tidak ditemukan" });
+      return res.status(400).json({ message: "Username atau password salah" });
     }
 
     const user = rows[0];
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Password salah" });
+      return res.status(400).json({ message: "Username atau password salah" });
     }
 
     const token = jwt.sign(
@@ -71,6 +89,17 @@ export const login = async (req, res) => {
 export const registerPetugas = async (req, res) => {
   try {
     const { username, password, nama_pengguna } = req.body;
+
+    // Validasi input
+    if (!username || username.length < 3) {
+      return res.status(400).json({ message: "Username minimal 3 karakter" });
+    }
+    if (!password || password.length < 8) {
+      return res.status(400).json({ message: "Password minimal 8 karakter" });
+    }
+    if (!nama_pengguna || nama_pengguna.trim() === "") {
+      return res.status(400).json({ message: "Nama pengguna wajib diisi" });
+    }
 
     const [checkUser] = await pool.query(
       "SELECT * FROM pengaduan_sarpras_user WHERE username = ?",
