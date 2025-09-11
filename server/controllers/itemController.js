@@ -1,5 +1,6 @@
 import pool from "../config/dbConfig.js";
 import imagekit from "../config/imageKitConfig.js";
+import multer from "multer"; // untuk handling error dari multer
 
 // GET all items
 export const getAllItems = async (req, res) => {
@@ -36,7 +37,7 @@ export const getItemById = async (req, res) => {
 };
 
 // CREATE item
-export const createItem = async (req, res) => {
+export const createItem = async (req, res, next) => {
   try {
     const { nama_item, deskripsi, id_lokasi } = req.body;
 
@@ -77,6 +78,15 @@ export const createItem = async (req, res) => {
       },
     });
   } catch (error) {
+    if (error instanceof multer.MulterError) {
+      if (error.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ message: "Ukuran file maksimal 2MB" });
+      }
+    }
+    if (error.message === "Format file harus JPG atau PNG") {
+      return res.status(400).json({ message: error.message });
+    }
+
     console.error("Error createItem:", error);
     res.status(500).json({ message: "Terjadi kesalahan server" });
   }
@@ -142,6 +152,15 @@ export const updateItem = async (req, res) => {
       },
     });
   } catch (error) {
+    if (error instanceof multer.MulterError) {
+      if (error.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ message: "Ukuran file maksimal 2MB" });
+      }
+    }
+    if (error.message === "Format file harus JPG atau PNG") {
+      return res.status(400).json({ message: error.message });
+    }
+
     console.error("Error update item:", error);
     res
       .status(500)
@@ -152,7 +171,6 @@ export const updateItem = async (req, res) => {
 // DELETE item
 export const deleteItem = async (req, res) => {
   try {
-    // Ambil dulu file_id untuk hapus gambar dari ImageKit
     const [items] = await pool.query(
       "SELECT file_id FROM pengaduan_sarpras_items WHERE id_item = ?",
       [req.params.id]
@@ -164,7 +182,6 @@ export const deleteItem = async (req, res) => {
 
     const fileId = items[0].file_id;
 
-    // Hapus gambar di ImageKit kalau ada
     if (fileId) {
       try {
         await imagekit.deleteFile(fileId);
@@ -173,7 +190,6 @@ export const deleteItem = async (req, res) => {
       }
     }
 
-    // Hapus dari database
     const [result] = await pool.query(
       "DELETE FROM pengaduan_sarpras_items WHERE id_item = ?",
       [req.params.id]
