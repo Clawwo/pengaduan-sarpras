@@ -1,6 +1,6 @@
 import pool from "../config/dbConfig.js";
 import imagekit from "../config/imageKitConfig.js";
-import multer from "multer"; // untuk handling error dari multer
+import multer from "multer"; 
 
 // GET all items
 export const getAllItems = async (req, res) => {

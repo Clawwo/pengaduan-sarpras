@@ -7,6 +7,7 @@ import itemRoutes from "./routes/itemRoute.js";
 import petugasRoutes from "./routes/petugasRoute.js";
 import listLokasiRoutes from "./routes/listLokasiRoute.js";
 import temporaryItemRoutes from "./routes/temporaryItemRoute.js";
+import pengaduanRoutes from "./routes/pengaduanRoute.js";
 
 dotenv.config();
 const app = express();
@@ -21,6 +22,7 @@ app.use("/api/lokasi", lokasiRoutes);
 app.use("/api/list-lokasi", listLokasiRoutes);
 app.use("/api/items", itemRoutes);
 app.use("/api/temporary-items", temporaryItemRoutes);
+app.use("/api/pengaduan", pengaduanRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

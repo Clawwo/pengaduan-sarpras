@@ -7,7 +7,7 @@ import {
   deleteItem,
 } from "../controllers/itemController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
-import upload from "../middleware/uploadImageMiddleware.js";
+import uploadImage from "../middleware/uploadImageMiddleware.js";
 
 const router = express.Router();
 
@@ -20,11 +20,16 @@ router.get(
 );
 
 // CRUD hanya admin & petugas
-router.post("/", authMiddleware(["admin"]), upload.single("foto"), createItem);
+router.post(
+  "/",
+  authMiddleware(["admin"]),
+  uploadImage("foto"),
+  createItem
+);
 router.put(
   "/:id",
   authMiddleware(["admin"]),
-  upload.single("foto"),
+  uploadImage("foto"),
   updateItem
 );
 router.delete("/:id", authMiddleware(["admin"]), deleteItem);
