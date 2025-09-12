@@ -44,6 +44,9 @@ export const createPengaduan = async (req, res) => {
     res.status(201).json({ message: "Pengaduan berhasil diajukan" });
   } catch (error) {
     console.error("Error createPengaduan:", error);
+    if (error.sqlState === "45000") {
+      return res.status(400).json({ message: error.sqlMessage });
+    }
     res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 };
