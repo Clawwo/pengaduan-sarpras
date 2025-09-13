@@ -1,13 +1,16 @@
-import pool from "../config/dbConfig.js";
+import {
+  getAllTemporaryItems as getAllTemporaryItemsService,
+  getTemporaryItemById as getTemporaryItemByIdService,
+  createTemporaryItem as createTemporaryItemService,
+  updateTemporaryItem as updateTemporaryItemService,
+  approveTemporaryItem as approveTemporaryItemService,
+  deleteTemporaryItem as deleteTemporaryItemService,
+} from "../services/temporaryItemService.js";
 
 // GET all temporary items
 export const getAllTemporaryItems = async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT ti.*, l.nama_lokasi 
-       FROM pengaduan_sarpras_temporary_item ti
-       LEFT JOIN pengaduan_sarpras_lokasi l ON ti.id_lokasi = l.id_lokasi`
-    );
+    const rows = await getAllTemporaryItemsService();
     res.json(rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -17,19 +20,12 @@ export const getAllTemporaryItems = async (req, res) => {
 // GET temporary item by id
 export const getTemporaryItemById = async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT ti.*, l.nama_lokasi 
-       FROM pengaduan_sarpras_temporary_item ti
-       LEFT JOIN pengaduan_sarpras_lokasi l ON ti.id_lokasi = l.id_lokasi
-       WHERE ti.id_temporary = ?`,
-      [req.params.id]
-    );
-
-    if (rows.length === 0)
+    const row = await getTemporaryItemByIdService(req.params.id);
+    if (!row)
       return res
         .status(404)
         .json({ message: "Temporary item tidak ditemukan" });
-    res.json(rows[0]);
+    res.json(row);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -41,15 +37,10 @@ export const createTemporaryItem = async (req, res) => {
     const { nama_barang_baru, id_lokasi } = req.body;
     if (!nama_barang_baru)
       return res.status(400).json({ message: "Nama barang baru wajib diisi" });
-
-    const [result] = await pool.query(
-      "INSERT INTO pengaduan_sarpras_temporary_item (nama_barang_baru, id_lokasi) VALUES (?, ?)",
-      [nama_barang_baru, id_lokasi || null]
-    );
-
+    const id = await createTemporaryItemService(nama_barang_baru, id_lokasi);
     res.status(201).json({
       message: "Temporary item berhasil ditambahkan",
-      id: result.insertId,
+      id,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -60,13 +51,12 @@ export const createTemporaryItem = async (req, res) => {
 export const updateTemporaryItem = async (req, res) => {
   try {
     const { nama_barang_baru, id_lokasi } = req.body;
-
-    const [result] = await pool.query(
-      "UPDATE pengaduan_sarpras_temporary_item SET nama_barang_baru = ?, id_lokasi = ? WHERE id_temporary = ?",
-      [nama_barang_baru, id_lokasi || null, req.params.id]
+    const affectedRows = await updateTemporaryItemService(
+      req.params.id,
+      nama_barang_baru,
+      id_lokasi
     );
-
-    if (result.affectedRows === 0)
+    if (affectedRows === 0)
       return res
         .status(404)
         .json({ message: "Temporary item tidak ditemukan" });
@@ -79,33 +69,11 @@ export const updateTemporaryItem = async (req, res) => {
 export const approveTemporaryItem = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // cek apakah item ada
-    const [rows] = await pool.query(
-      "SELECT * FROM pengaduan_sarpras_temporary_item WHERE id_temporary = ?",
-      [id]
-    );
-
-    if (rows.length === 0) {
+    const result = await approveTemporaryItemService(id);
+    if (!result)
       return res
         .status(404)
         .json({ message: "Temporary item tidak ditemukan" });
-    }
-
-    const tempItem = rows[0];
-
-    // pindahkan ke tabel items resmi
-    await pool.query(
-      "INSERT INTO pengaduan_sarpras_items (nama_item, id_lokasi) VALUES (?, ?)",
-      [tempItem.nama_barang_baru, tempItem.id_lokasi]
-    );
-
-    // hapus dari tabel temporary
-    await pool.query(
-      "DELETE FROM pengaduan_sarpras_temporary_item WHERE id_temporary = ?",
-      [id]
-    );
-
     res.json({ message: "Item berhasil dipindahkan ke items resmi" });
   } catch (error) {
     console.error(error);
@@ -116,11 +84,8 @@ export const approveTemporaryItem = async (req, res) => {
 // DELETE temporary item
 export const deleteTemporaryItem = async (req, res) => {
   try {
-    const [result] = await pool.query(
-      "DELETE FROM pengaduan_sarpras_temporary_item WHERE id_temporary = ?",
-      [req.params.id]
-    );
-    if (result.affectedRows === 0)
+    const affectedRows = await deleteTemporaryItemService(req.params.id);
+    if (affectedRows === 0)
       return res
         .status(404)
         .json({ message: "Temporary item tidak ditemukan" });

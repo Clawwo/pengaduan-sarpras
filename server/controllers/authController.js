@@ -1,6 +1,11 @@
-import jwt from "jsonwebtoken";
-import pool from "../config/dbConfig.js";
 import bcrypt from "bcryptjs";
+import { generateToken } from "../helpers/jwtHelper.js";
+import {
+  findUserByUsername,
+  isUsernameExist,
+  createUser,
+  createPetugas,
+} from "../services/authService.js";
 
 const sendError = (res, status, message) =>
   res.status(status).json({ message });
@@ -8,20 +13,9 @@ const sendError = (res, status, message) =>
 export const register = async (req, res) => {
   try {
     const { username, password, nama_pengguna } = req.body;
-
-    const [checkUser] = await pool.query(
-      "SELECT 1 FROM pengaduan_sarpras_user WHERE username = ?",
-      [username]
-    );
-    if (checkUser.length)
+    if (await isUsernameExist(username))
       return sendError(res, 400, "Username sudah terdaftar");
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(
-      "INSERT INTO pengaduan_sarpras_user (username, password, nama_pengguna, role) VALUES (?,?,?,?)",
-      [username, hashedPassword, nama_pengguna, "pengguna"]
-    );
-
+    await createUser(username, password, nama_pengguna, "pengguna");
     res.status(201).json({ message: "Registrasi berhasil" });
   } catch (error) {
     console.error(error);
@@ -32,24 +26,11 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    const [rows] = await pool.query(
-      "SELECT * FROM pengaduan_sarpras_user WHERE username = ?",
-      [username]
-    );
-    if (!rows.length)
-      return sendError(res, 400, "Username atau password salah");
-
-    const user = rows[0];
+    const user = await findUserByUsername(username);
+    if (!user) return sendError(res, 400, "Username atau password salah");
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return sendError(res, 400, "Username atau password salah");
-
-    const token = jwt.sign(
-      { id: user.id_user, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
+    const token = generateToken({ id: user.id_user, role: user.role });
     res.json({
       message: "Login berhasil",
       token,
@@ -69,26 +50,15 @@ export const login = async (req, res) => {
 export const registerPetugas = async (req, res) => {
   try {
     const { username, password, nama_pengguna, nama, gender, telp } = req.body;
-
-    const [checkUser] = await pool.query(
-      "SELECT 1 FROM pengaduan_sarpras_user WHERE username = ?",
-      [username]
-    );
-    if (checkUser.length)
+    if (await isUsernameExist(username))
       return sendError(res, 400, "Username sudah terdaftar");
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const [userResult] = await pool.query(
-      "INSERT INTO pengaduan_sarpras_user (username, password, nama_pengguna, role) VALUES (?,?,?,?)",
-      [username, hashedPassword, nama_pengguna, "petugas"]
+    const id_user = await createUser(
+      username,
+      password,
+      nama_pengguna,
+      "petugas"
     );
-
-    await pool.query(
-      "INSERT INTO pengaduan_sarpras_petugas (nama, gender, telp, id_user) VALUES (?,?,?,?)",
-      [nama, gender, telp || null, userResult.insertId]
-    );
-
+    await createPetugas(nama, gender, telp, id_user);
     res.status(201).json({ message: "Petugas berhasil ditambahkan" });
   } catch (error) {
     console.error(error);

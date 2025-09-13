@@ -4,11 +4,14 @@ import {
   getAllPengaduan,
   getPengaduanByUser,
   updatePengaduanStatus,
+  getPengaduanReport,
 } from "../controllers/pengaduanController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import uploadImage from "../middleware/uploadImageMiddleware.js";
 
 const router = express.Router();
+
+router.get("/report", authMiddleware(["admin"]), getPengaduanReport);
 
 router.post(
   "/",
