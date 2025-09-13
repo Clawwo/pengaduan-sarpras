@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import authRoutes from "./routes/authRoute.js";
 import userRoutes from "./routes/userRoute.js";
 import lokasiRoutes from "./routes/lokasiRoute.js";
@@ -12,6 +13,12 @@ import pengaduanRoutes from "./routes/pengaduanRoute.js";
 dotenv.config();
 const app = express();
 
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Routes
