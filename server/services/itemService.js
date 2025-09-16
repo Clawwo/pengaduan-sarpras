@@ -2,7 +2,7 @@ import pool from "../config/dbConfig.js";
 
 export const getAllItems = async () => {
   const [rows] = await pool.query(`
-    SELECT i.id_item, i.nama_item, i.deskripsi, i.foto, i.file_id, l.nama_lokasi
+    SELECT i.id_item, i.nama_item, i.deskripsi, i.foto, i.file_id, i.id_lokasi, l.nama_lokasi
     FROM pengaduan_sarpras_items i
     LEFT JOIN pengaduan_sarpras_lokasi l ON i.id_lokasi = l.id_lokasi
   `);
@@ -11,7 +11,7 @@ export const getAllItems = async () => {
 
 export const getItemById = async (id) => {
   const [rows] = await pool.query(
-    `SELECT i.id_item, i.nama_item, i.deskripsi, i.foto, i.file_id, l.nama_lokasi
+    `SELECT i.id_item, i.nama_item, i.deskripsi, i.foto, i.file_id, i.id_lokasi, l.nama_lokasi
      FROM pengaduan_sarpras_items i
      LEFT JOIN pengaduan_sarpras_lokasi l ON i.id_lokasi = l.id_lokasi
      WHERE i.id_item = ?`,
