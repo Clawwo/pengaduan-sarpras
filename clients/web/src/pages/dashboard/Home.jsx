@@ -23,6 +23,15 @@ import {
 } from "lucide-react";
 import { CardAction } from "@/components/ui/card";
 import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -329,93 +338,67 @@ const Home = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="relative w-full overflow-x-auto rounded-md border border-neutral-800 bg-neutral-900/50">
-            <table className="w-full table-fixed caption-bottom text-sm">
-              <colgroup>
-                <col style={{ width: "120px" }} />
-                <col style={{ width: "180px" }} />
-                <col style={{ width: "160px" }} />
-                <col style={{ width: "160px" }} />
-                <col />
-                <col style={{ width: "140px" }} />
-              </colgroup>
-              <thead className="[&_tr]:border-b border-neutral-800">
-                <tr className="border-b border-neutral-800">
-                  <th className="h-10 px-3 text-left align-middle font-medium whitespace-nowrap text-neutral-300">
-                    Tanggal
-                  </th>
-                  <th className="h-10 px-3 text-left align-middle font-medium whitespace-nowrap text-neutral-300">
-                    Nama
-                  </th>
-                  <th className="h-10 px-3 text-left align-middle font-medium whitespace-nowrap text-neutral-300">
-                    Item
-                  </th>
-                  <th className="h-10 px-3 text-left align-middle font-medium whitespace-nowrap text-neutral-300">
-                    Lokasi
-                  </th>
-                  <th className="h-10 px-3 text-left align-middle font-medium whitespace-nowrap text-neutral-300">
-                    Deskripsi
-                  </th>
-                  <th className="h-10 px-3 text-right align-middle font-medium whitespace-nowrap text-neutral-300">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="[&_tr:last-child]:border-0 [&>tr:nth-child(even)]:bg-neutral-900/40">
-                {(loading ? [] : recentRows).map((r) => (
-                  <tr
-                    key={r.id_pengaduan}
-                    className="border-b border-neutral-800 hover:bg-neutral-800/40 transition-colors"
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tanggal</TableHead>
+                <TableHead>Nama Pengaduan</TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead>Lokasi</TableHead>
+                <TableHead>Deskripsi</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(loading ? [] : recentRows).map((r) => (
+                <TableRow key={r.id_pengaduan}>
+                  <TableCell>
+                    {new Date(
+                      r.created_at || r.tgl_pengajuan
+                    ).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell
+                    className="truncate max-w-[220px]"
+                    title={r.nama_pengaduan || "-"}
                   >
-                    <td className="p-3 align-middle whitespace-nowrap font-mono tabular-nums text-neutral-300">
-                      {new Date(
-                        r.created_at || r.tgl_pengajuan
-                      ).toLocaleDateString()}
-                    </td>
-                    <td
-                      className="p-3 align-middle whitespace-nowrap text-neutral-200 truncate"
-                      title={r.nama_pengaduan || "-"}
-                    >
-                      {r.nama_pengaduan}
-                    </td>
-                    <td
-                      className="p-3 align-middle whitespace-nowrap text-neutral-200 truncate"
-                      title={r.nama_item || "-"}
-                    >
-                      {r.nama_item}
-                    </td>
-                    <td
-                      className="p-3 align-middle whitespace-nowrap text-neutral-200 truncate"
-                      title={r.nama_lokasi || "-"}
-                    >
-                      {r.nama_lokasi}
-                    </td>
-                    <td
-                      className="p-3 align-middle whitespace-nowrap text-neutral-200 truncate"
-                      title={r.deskripsi || "-"}
-                    >
-                      {r?.deskripsi && r.deskripsi.length > 100
-                        ? `${r.deskripsi.slice(0, 100)}...`
-                        : r.deskripsi || "-"}
-                    </td>
-                    <td className="p-3 align-middle whitespace-nowrap text-neutral-200 text-right">
-                      {renderStatus(r.status)}
-                    </td>
-                  </tr>
-                ))}
-                {!loading && rows.length === 0 && (
-                  <tr>
-                    <td
-                      className="p-3 align-middle whitespace-nowrap text-neutral-500"
-                      colSpan={6}
-                    >
-                      Belum ada pengaduan.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    {r.nama_pengaduan}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="truncate" title={r.nama_item || "-"}>
+                        {r.nama_item}
+                      </span>
+                      {r?.id_temporary ? (
+                        <span className="shrink-0 text-[11px] text-amber-300/90 italic">
+                          (sementara)
+                        </span>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell>{r.nama_lokasi}</TableCell>
+                  <TableCell
+                    title={r.deskripsi || "-"}
+                    className="truncate max-w-[360px]"
+                  >
+                    {r?.deskripsi && r.deskripsi.length > 140
+                      ? `${r.deskripsi.slice(0, 140)}...`
+                      : r.deskripsi || "-"}
+                  </TableCell>
+                  <TableCell>{renderStatus(r.status)}</TableCell>
+                </TableRow>
+              ))}
+              {!loading && rows.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    className="text-neutral-500 text-center"
+                    colSpan={6}
+                  >
+                    Belum ada pengaduan.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

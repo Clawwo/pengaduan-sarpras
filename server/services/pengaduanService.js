@@ -10,7 +10,7 @@ export const getPengaduanReport = async ({
     FROM pengaduan_sarpras_pengaduan p
     JOIN pengaduan_sarpras_user u ON p.id_user = u.id_user
     JOIN pengaduan_sarpras_lokasi l ON p.id_lokasi = l.id_lokasi
-    JOIN pengaduan_sarpras_items i ON p.id_item = i.id_item
+    LEFT JOIN pengaduan_sarpras_items i ON p.id_item = i.id_item
     LEFT JOIN pengaduan_sarpras_petugas pt ON p.id_petugas = pt.id_petugas
     WHERE 1=1`;
   const params = [];
@@ -45,11 +45,12 @@ export const createPengaduan = async (data) => {
     id_user,
     id_item,
     id_lokasi,
+    id_temporary,
   } = data;
   await pool.query(
     `INSERT INTO pengaduan_sarpras_pengaduan 
-      (nama_pengaduan, deskripsi, foto, file_id, id_user, id_item, id_lokasi, status, tgl_pengajuan) 
-     VALUES (?,?,?,?,?,?,?, 'Diajukan', CURDATE())`,
+      (nama_pengaduan, deskripsi, foto, file_id, id_user, id_item, id_lokasi, id_temporary, status, tgl_pengajuan) 
+     VALUES (?,?,?,?,?,?,?,?, 'Diajukan', CURDATE())`,
     [
       nama_pengaduan,
       deskripsi || null,
@@ -58,17 +59,19 @@ export const createPengaduan = async (data) => {
       id_user,
       id_item,
       id_lokasi,
+      id_temporary || null,
     ]
   );
 };
 
 export const getAllPengaduan = async () => {
   const [rows] = await pool.query(
-    `SELECT p.*, u.nama_pengguna, l.nama_lokasi, i.nama_item, pt.nama as nama_petugas
+    `SELECT p.*, u.nama_pengguna, l.nama_lokasi, COALESCE(i.nama_item, ti.nama_barang_baru) AS nama_item, pt.nama as nama_petugas
      FROM pengaduan_sarpras_pengaduan p
      JOIN pengaduan_sarpras_user u ON p.id_user = u.id_user
      JOIN pengaduan_sarpras_lokasi l ON p.id_lokasi = l.id_lokasi
-     JOIN pengaduan_sarpras_items i ON p.id_item = i.id_item
+     LEFT JOIN pengaduan_sarpras_items i ON p.id_item = i.id_item
+     LEFT JOIN pengaduan_sarpras_temporary_item ti ON p.id_temporary = ti.id_temporary
      LEFT JOIN pengaduan_sarpras_petugas pt ON p.id_petugas = pt.id_petugas
      ORDER BY p.created_at DESC`
   );
@@ -77,10 +80,11 @@ export const getAllPengaduan = async () => {
 
 export const getPengaduanByUser = async (id_user) => {
   const [rows] = await pool.query(
-    `SELECT p.*, l.nama_lokasi, i.nama_item 
+    `SELECT p.*, l.nama_lokasi, COALESCE(i.nama_item, ti.nama_barang_baru) AS nama_item 
      FROM pengaduan_sarpras_pengaduan p
      JOIN pengaduan_sarpras_lokasi l ON p.id_lokasi = l.id_lokasi
-     JOIN pengaduan_sarpras_items i ON p.id_item = i.id_item
+     LEFT JOIN pengaduan_sarpras_items i ON p.id_item = i.id_item
+     LEFT JOIN pengaduan_sarpras_temporary_item ti ON p.id_temporary = ti.id_temporary
      WHERE p.id_user = ?
      ORDER BY p.created_at DESC`,
     [id_user]

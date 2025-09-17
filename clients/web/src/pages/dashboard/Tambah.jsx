@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAppConfig } from "../../lib/useAppConfig";
 import { getLokasi, getItems } from "../../lib/utils/reference";
-import { createTemporaryItem as createTempItem } from "@/lib/utils/temporaryItem";
 import { createPengaduan } from "../../lib/utils/pengaduan";
 import { toast } from "react-hot-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Card,
   CardContent,
@@ -40,6 +40,7 @@ const Tambah = () => {
   const [showCustomItem, setShowCustomItem] = useState(false);
   const [lokasi, setLokasiList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [alerts, setAlerts] = useState([]); // queue of { type, title, description, duration, onClosed }
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -98,19 +99,25 @@ const Tambah = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!nama_pengaduan || !id_lokasi || (!id_item && !customItem)) {
-      toast.error("Nama pengaduan, item, dan lokasi wajib diisi");
+      const msg = "Nama pengaduan, item, dan lokasi wajib diisi";
+      toast.error(msg);
+      setAlerts((prev) => [
+        ...prev,
+        {
+          type: "destructive",
+          title: "Form belum lengkap",
+          description: msg,
+          duration: 3000,
+        },
+      ]);
       return;
     }
     try {
       setLoading(true);
       let usedItemId = id_item;
-      // If custom item, create temporary item first
+      // For custom items, rely on server to create the temporary item and keep id_item null
       if (showCustomItem && customItem.trim()) {
-        await createTempItem(apiUrl, customItem.trim(), id_lokasi);
-        toast.success(
-          "Item baru berhasil diajukan, menunggu verifikasi petugas"
-        );
-        usedItemId = "TEMPORARY"; // or null, not used in backend
+        usedItemId = null;
       }
       await createPengaduan(apiUrl, {
         nama_pengaduan,
@@ -120,14 +127,35 @@ const Tambah = () => {
         foto,
         nama_item_baru: showCustomItem ? customItem.trim() : undefined,
       });
-      toast.success("Pengaduan berhasil diajukan");
+      const successMsg = showCustomItem
+        ? "Pengaduan berhasil diajukan. Item baru akan diverifikasi petugas."
+        : "Pengaduan berhasil diajukan";
+      toast.success(successMsg);
+      setAlerts((prev) => [
+        ...prev,
+        {
+          type: "default",
+          title: "Berhasil",
+          description: successMsg,
+          duration: 3000,
+        },
+      ]);
       resetForm();
     } catch (err) {
-      toast.error(
+      const errMsg =
         err?.response?.data?.message ||
-          err.message ||
-          "Gagal mengajukan pengaduan"
-      );
+        err.message ||
+        "Gagal mengajukan pengaduan";
+      toast.error(errMsg);
+      setAlerts((prev) => [
+        ...prev,
+        {
+          type: "destructive",
+          title: "Gagal",
+          description: errMsg,
+          duration: 3500,
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -135,6 +163,26 @@ const Tambah = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
+      {alerts[0] && (
+        <Alert
+          floating
+          position="top-center"
+          variant={alerts[0].type}
+          onClose={() => {
+            const closed = alerts[0];
+            setAlerts((prev) => prev.slice(1));
+            if (closed && typeof closed.onClosed === "function") {
+              closed.onClosed();
+            }
+          }}
+          duration={alerts[0].duration ?? 3000}
+        >
+          <AlertTitle>{alerts[0].title}</AlertTitle>
+          {alerts[0].description && (
+            <AlertDescription>{alerts[0].description}</AlertDescription>
+          )}
+        </Alert>
+      )}
       <Card className="bg-neutral-950/50 border-neutral-800">
         <CardHeader className="border-b border-neutral-800">
           <CardTitle className="text-neutral-100">Tambah Pengaduan</CardTitle>

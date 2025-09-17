@@ -43,9 +43,15 @@ export const approveTemporaryItem = async (id) => {
   );
   if (!rows.length) return null;
   const tempItem = rows[0];
-  await pool.query(
+  const [ins] = await pool.query(
     "INSERT INTO pengaduan_sarpras_items (nama_item, id_lokasi) VALUES (?, ?)",
     [tempItem.nama_barang_baru, tempItem.id_lokasi]
+  );
+  const newItemId = ins.insertId;
+  // Update all related pengaduan to reference the new official item
+  await pool.query(
+    "UPDATE pengaduan_sarpras_pengaduan SET id_item = ?, id_temporary = NULL WHERE id_temporary = ?",
+    [newItemId, id]
   );
   await pool.query(
     "DELETE FROM pengaduan_sarpras_temporary_item WHERE id_temporary = ?",

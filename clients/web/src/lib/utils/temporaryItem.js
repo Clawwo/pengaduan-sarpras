@@ -7,7 +7,7 @@ export const createTemporaryItem = async (
 ) => {
   const token = localStorage.getItem("token");
   const { data } = await axios.post(
-    `${apiUrl}/api/temporary-item`,
+    `${apiUrl}/api/temporary-items`,
     { nama_barang_baru, id_lokasi },
     { headers: { Authorization: `Bearer ${token}` } }
   );

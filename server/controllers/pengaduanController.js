@@ -1,4 +1,5 @@
 import { uploadImage, deleteImage } from "../helpers/imageKitHelper.js";
+import { createTemporaryItem as createTemporaryItemService } from "../services/temporaryItemService.js";
 import {
   createPengaduan as createPengaduanService,
   getAllPengaduan as getAllPengaduanService,
@@ -10,13 +11,18 @@ import {
 
 export const createPengaduan = async (req, res) => {
   try {
-    const { nama_pengaduan, deskripsi, id_item, id_lokasi } = req.body;
+    const { nama_pengaduan, deskripsi, id_item, id_lokasi, nama_item_baru } =
+      req.body;
     const id_user = req.user.id;
 
-    if (!nama_pengaduan || !id_item || !id_lokasi) {
+    if (!nama_pengaduan || !id_lokasi) {
       return res
         .status(400)
-        .json({ message: "Nama pengaduan, item, dan lokasi wajib diisi" });
+        .json({ message: "Nama pengaduan dan lokasi wajib diisi" });
+    }
+    // Require either existing item or a new item name
+    if (!id_item && !nama_item_baru) {
+      return res.status(400).json({ message: "Pilih item atau isi item baru" });
     }
 
     let imageUrl = null;
@@ -32,14 +38,32 @@ export const createPengaduan = async (req, res) => {
       fileId = uploadResponse.fileId;
     }
 
+    // If user proposes a new item, create a temporary item entry first
+    let id_temporary = null;
+    if (!id_item && nama_item_baru) {
+      try {
+        id_temporary = await createTemporaryItemService(
+          nama_item_baru,
+          id_lokasi
+        );
+      } catch (err) {
+        console.error("Gagal membuat temporary item:", err);
+        return res
+          .status(500)
+          .json({ message: "Gagal membuat item baru sementara" });
+      }
+    }
+
     await createPengaduanService({
       nama_pengaduan,
       deskripsi,
       foto: imageUrl,
       file_id: fileId,
       id_user,
-      id_item,
+      // Pass null when item is proposed and awaiting approval
+      id_item: id_item || null,
       id_lokasi,
+      id_temporary,
     });
 
     res.status(201).json({ message: "Pengaduan berhasil diajukan" });

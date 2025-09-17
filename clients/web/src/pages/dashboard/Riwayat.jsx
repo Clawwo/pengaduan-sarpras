@@ -281,7 +281,18 @@ const Riwayat = () => {
               <TableCell className="truncate max-w-[220px]">
                 {r.nama_pengaduan}
               </TableCell>
-              <TableCell>{r.nama_item}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="truncate" title={r.nama_item || "-"}>
+                    {r.nama_item}
+                  </span>
+                  {r?.id_temporary ? (
+                    <span className="shrink-0 text-[11px] text-amber-300/90 italic">
+                      (sementara)
+                    </span>
+                  ) : null}
+                </div>
+              </TableCell>
               <TableCell>{r.nama_lokasi}</TableCell>
               <TableCell
                 title={r.deskripsi || "-"}
