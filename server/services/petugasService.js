@@ -49,3 +49,12 @@ export const updatePetugasProfile = async (
   );
   return result.affectedRows;
 };
+
+// Helper: map id_user to id_petugas
+export const getPetugasIdByUserId = async (id_user) => {
+  const [rows] = await pool.query(
+    "SELECT id_petugas FROM pengaduan_sarpras_petugas WHERE id_user = ?",
+    [id_user]
+  );
+  return rows && rows[0] ? rows[0].id_petugas : null;
+};

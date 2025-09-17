@@ -7,6 +7,8 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import Home from "./pages/dashboard/Home";
 import Riwayat from "./pages/dashboard/Riwayat";
 import Tambah from "./pages/dashboard/Tambah";
+import PetugasLayout from "./layouts/PetugasLayout";
+import PetugasPengaduan from "./pages/petugas/Pengaduan";
 
 function App() {
   return (
@@ -20,6 +22,13 @@ function App() {
             <Route index element={<Home />} />
             <Route path="riwayat" element={<Riwayat />} />
             <Route path="tambah" element={<Tambah />} />
+          </Route>
+        </Route>
+
+        {/* Petugas Dashboard */}
+        <Route element={<ProtectedRoute roles={["petugas"]} />}>
+          <Route path="/petugas" element={<PetugasLayout />}>
+            <Route index element={<PetugasPengaduan />} />
           </Route>
         </Route>
       </Routes>

@@ -1,5 +1,6 @@
 import { uploadImage, deleteImage } from "../helpers/imageKitHelper.js";
 import { createTemporaryItem as createTemporaryItemService } from "../services/temporaryItemService.js";
+import { getPetugasIdByUserId as getPetugasIdByUserIdService } from "../services/petugasService.js";
 import {
   createPengaduan as createPengaduanService,
   getAllPengaduan as getAllPengaduanService,
@@ -118,7 +119,14 @@ export const updatePengaduanStatus = async (req, res) => {
         }
       }
     }
-    const id_petugas = req.user.id;
+    // Token stores id_user; we need to map it to id_petugas
+    const id_user = req.user.id;
+    const id_petugas = await getPetugasIdByUserIdService(id_user);
+    if (!id_petugas) {
+      return res
+        .status(403)
+        .json({ message: "Akun ini bukan petugas terdaftar" });
+    }
     await updatePengaduanStatusService(
       id,
       status,
