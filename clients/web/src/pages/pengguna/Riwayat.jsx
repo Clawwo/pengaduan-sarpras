@@ -4,7 +4,6 @@ import { getRiwayatPengaduan } from "../../lib/utils/pengaduan";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
