@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
+import {
+  NavLink,
+  Outlet,
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import {
   LayoutGrid,
   Users2,
@@ -14,12 +20,6 @@ import {
 import { toast } from "react-hot-toast";
 import { useAppConfig } from "../lib/useAppConfig";
 import { updateMyProfile } from "../lib/utils/user";
-import {
-  requestPermissionAndToken,
-  registerFcmToken,
-  unregisterFcmToken,
-  onForegroundMessage,
-} from "../lib/utils/notifications";
 import {
   Sheet,
   SheetContent,
@@ -47,6 +47,7 @@ const linkClass = ({ isActive }) =>
 
 const AdminLayout = () => {
   const { apiUrl } = useAppConfig();
+  const navigate = useNavigate();
   const location = useLocation();
   const userStr =
     typeof window !== "undefined" ? localStorage.getItem("user") : null;
@@ -57,19 +58,12 @@ const AdminLayout = () => {
   const [saving, setSaving] = useState(false);
   const [nama, setNama] = useState(user?.nama_pengguna || "");
   const [username, setUsername] = useState(user?.username || "");
-  const [password, setPassword] = useState("");
   const menuRef = useRef(null);
   const menuBtnRef = useRef(null);
 
   const onLogout = () => {
-    // Attempt to unregister FCM token before clearing
-    const authToken = localStorage.getItem("token");
-    const fcmToken = localStorage.getItem("fcmToken");
-    if (authToken && fcmToken) {
-      unregisterFcmToken(apiUrl, fcmToken, authToken);
-    }
     localStorage.clear();
-    window.location.href = "/";
+    navigate("/", { replace: true });
   };
 
   useEffect(() => {
@@ -99,35 +93,9 @@ const AdminLayout = () => {
     };
   }, [menuOpen]);
 
-  // Register FCM on mount
-  useEffect(() => {
-    let unsub = null;
-    const run = async () => {
-      const authToken = localStorage.getItem("token");
-      if (!authToken) return;
-      const token = await requestPermissionAndToken();
-      if (token) {
-        localStorage.setItem("fcmToken", token);
-        await registerFcmToken(apiUrl, token, authToken);
-      }
-      unsub = await onForegroundMessage((payload) => {
-        // lightweight toast for foreground messages
-        const title = payload?.notification?.title || "Notifikasi";
-        const body = payload?.notification?.body || "Ada pembaruan";
-        toast.success(`${title}: ${body}`);
-      });
-    };
-    run();
-    return () => {
-      if (typeof unsub === "function") unsub();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const openEdit = () => {
     setNama(user?.nama_pengguna || "");
     setUsername(user?.username || "");
-    setPassword("");
     setEditOpen(true);
     setMenuOpen(false);
   };
@@ -135,7 +103,7 @@ const AdminLayout = () => {
   const saveProfile = async (e) => {
     e?.preventDefault?.();
     try {
-      if (!nama && !username && !password) {
+      if (!nama && !username) {
         toast.error("Tidak ada perubahan untuk disimpan");
         return;
       }
@@ -143,7 +111,6 @@ const AdminLayout = () => {
       await updateMyProfile(apiUrl, {
         nama_pengguna: nama,
         username,
-        password: password || undefined,
       });
       const next = {
         ...user,
@@ -394,7 +361,7 @@ const AdminLayout = () => {
           <SheetHeader>
             <SheetTitle className="text-neutral-100">Edit Profile</SheetTitle>
             <SheetDescription className="text-neutral-400">
-              Perbarui nama, username, atau password.
+              Perbarui nama atau username.
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={saveProfile} className="px-4 pb-4 space-y-3">
@@ -420,18 +387,6 @@ const AdminLayout = () => {
                 className="w-full rounded-md bg-neutral-900/60 border border-neutral-800 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-700 px-3 py-2"
                 placeholder="Username"
                 type="text"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-neutral-300 mb-1">
-                Password (opsional)
-              </label>
-              <input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md bg-neutral-900/60 border border-neutral-800 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-700 px-3 py-2"
-                placeholder="••••••••"
-                type="password"
               />
             </div>
             <SheetFooter className="mt-4">

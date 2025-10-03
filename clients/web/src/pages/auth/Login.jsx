@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppConfig } from "../../lib/useAppConfig";
 import { loginUser } from "../../lib/utils/auth.js";
 import { LoginForm } from "../../components/ui/form/login-form";
@@ -8,6 +9,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState([]); // queue of {type, title, description, duration, onClosed}
   const { apiUrl } = useAppConfig();
+  const navigate = useNavigate();
 
   const currentAlert = alerts[0] || null;
   const pushAlert = (a) => setAlerts((prev) => [...prev, a]);
@@ -32,10 +34,10 @@ const Login = () => {
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
       const role = res.user.role;
-      if (role === "pengguna") window.location.href = "/dashboard";
-      else if (role === "admin") window.location.href = "/admin";
-      else if (role === "petugas") window.location.href = "/petugas";
-      else window.location.href = "/";
+      if (role === "pengguna") navigate("/dashboard", { replace: true });
+      else if (role === "admin") navigate("/admin", { replace: true });
+      else if (role === "petugas") navigate("/petugas", { replace: true });
+      else navigate("/", { replace: true });
     } catch (msg) {
       pushAlert({
         type: "destructive",

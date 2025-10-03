@@ -257,6 +257,12 @@ const AdminLokasi = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            className="inline-flex items-center gap-2 rounded-md border border-neutral-800 bg-neutral-900/60 text-neutral-300 px-3 py-2 text-sm hover:bg-neutral-800"
+          >
+            Total: {rows.length}
+          </button>
+          <button
+            type="button"
             onClick={openCreate}
             className="inline-flex items-center gap-2 rounded-md bg-orange-500 text-white px-3 py-2 text-sm hover:bg-orange-600"
           >

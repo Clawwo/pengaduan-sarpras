@@ -293,67 +293,75 @@ const AdminPengaduan = () => {
             className="w-full rounded-md border border-neutral-800 bg-neutral-900/60 pl-9 pr-3 py-2 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:ring-0 focus:border-neutral-700"
           />
         </div>
-        <div className="relative" ref={filterRef}>
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setShowFilter((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-md border border-neutral-800 bg-neutral-900/60 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800"
+            className="inline-flex items-center gap-2 rounded-md border border-neutral-800 bg-neutral-900/60 text-neutral-300 px-3 py-2 text-sm hover:bg-neutral-800"
           >
-            <Filter className="size-4" />
-            Filter
-            {selectedStatuses.size > 0 && (
-              <span className="ml-1 rounded-full bg-neutral-800 px-1.5 text-xs text-neutral-300 border border-neutral-700">
-                {selectedStatuses.size}
-              </span>
-            )}
+            Total: {rows.length}
           </button>
-          {showFilter && (
-            <div className="absolute right-0 z-20 mt-2 w-56 rounded-md border border-neutral-800 bg-neutral-900/95 backdrop-blur p-3 shadow-lg">
-              <div className="mb-2 text-xs font-medium text-neutral-400">
-                Status
-              </div>
-              <div className="space-y-2">
-                {[
-                  { key: "diajukan", label: "Diajukan" },
-                  { key: "proses", label: "Diproses" },
-                  { key: "diterima", label: "Diterima/Selesai" },
-                  { key: "ditolak", label: "Ditolak" },
-                ].map((opt) => (
-                  <label
-                    key={opt.key}
-                    className="flex items-center gap-2 text-sm text-neutral-300"
+          <div className="relative" ref={filterRef}>
+            <button
+              type="button"
+              onClick={() => setShowFilter((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-md border border-neutral-800 bg-neutral-900/60 px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800"
+            >
+              <Filter className="size-4" />
+              Filter
+              {selectedStatuses.size > 0 && (
+                <span className="ml-1 rounded-full bg-neutral-800 px-1.5 text-xs text-neutral-300 border border-neutral-700">
+                  {selectedStatuses.size}
+                </span>
+              )}
+            </button>
+            {showFilter && (
+              <div className="absolute right-0 z-20 mt-2 w-56 rounded-md border border-neutral-800 bg-neutral-900/95 backdrop-blur p-3 shadow-lg">
+                <div className="mb-2 text-xs font-medium text-neutral-400">
+                  Status
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { key: "diajukan", label: "Diajukan" },
+                    { key: "proses", label: "Diproses" },
+                    { key: "diterima", label: "Diterima/Selesai" },
+                    { key: "ditolak", label: "Ditolak" },
+                  ].map((opt) => (
+                    <label
+                      key={opt.key}
+                      className="flex items-center gap-2 text-sm text-neutral-300"
+                    >
+                      <Checkbox
+                        checked={selectedStatuses.has(opt.key)}
+                        onCheckedChange={(checked) => {
+                          setSelectedStatuses((prev) => {
+                            const next = new Set(prev);
+                            if (checked) next.add(opt.key);
+                            else next.delete(opt.key);
+                            return next;
+                          });
+                        }}
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-3 pt-2 border-t border-neutral-800 flex items-center justify-between">
+                  <button
+                    className="text-xs text-neutral-400 hover:text-neutral-200"
+                    onClick={() => setSelectedStatuses(new Set())}
                   >
-                    <Checkbox
-                      checked={selectedStatuses.has(opt.key)}
-                      onCheckedChange={(checked) => {
-                        setSelectedStatuses((prev) => {
-                          const next = new Set(prev);
-                          if (checked) next.add(opt.key);
-                          else next.delete(opt.key);
-                          return next;
-                        });
-                      }}
-                    />
-                    {opt.label}
-                  </label>
-                ))}
+                    Reset
+                  </button>
+                  <button
+                    className="text-xs text-neutral-300 hover:text-neutral-100"
+                    onClick={() => setShowFilter(false)}
+                  >
+                    Tutup
+                  </button>
+                </div>
               </div>
-              <div className="mt-3 pt-2 border-t border-neutral-800 flex items-center justify-between">
-                <button
-                  className="text-xs text-neutral-400 hover:text-neutral-200"
-                  onClick={() => setSelectedStatuses(new Set())}
-                >
-                  Reset
-                </button>
-                <button
-                  className="text-xs text-neutral-300 hover:text-neutral-100"
-                  onClick={() => setShowFilter(false)}
-                >
-                  Tutup
-                </button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
