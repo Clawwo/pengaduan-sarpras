@@ -44,8 +44,8 @@ const linkClass = ({ isActive }) =>
   }`;
 
 const DashboardLayout = () => {
-  const { apiUrl } = useAppConfig();
   const navigate = useNavigate();
+  const { apiUrl } = useAppConfig();
   const location = useLocation();
   const userStr =
     typeof window !== "undefined" ? localStorage.getItem("user") : null;

@@ -1,5 +1,4 @@
 import pool from "../config/dbConfig.js";
-import bcrypt from "bcryptjs";
 
 export const getUsers = async () => {
   const [rows] = await pool.query(
@@ -37,11 +36,6 @@ export const updateProfile = async (
   if (username) {
     query += "username = ?, ";
     params.push(username);
-  }
-  if (password) {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    query += "password = ?, ";
-    params.push(hashedPassword);
   }
   query = query.slice(0, -2);
   query += " WHERE id_user = ?";

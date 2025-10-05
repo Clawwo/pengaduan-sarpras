@@ -1,5 +1,8 @@
 import { uploadImage, deleteImage } from "../helpers/imageKitHelper.js";
-import { createTemporaryItem as createTemporaryItemService } from "../services/temporaryItemService.js";
+import {
+  createTemporaryItem as createTemporaryItemService,
+  approveTemporaryItem as approveTemporaryItemService,
+} from "../services/temporaryItemService.js";
 import { getPetugasIdByUserId as getPetugasIdByUserIdService } from "../services/petugasService.js";
 import {
   createPengaduan as createPengaduanService,
@@ -119,13 +122,18 @@ export const updatePengaduanStatus = async (req, res) => {
         }
       }
     }
-    // Token stores id_user; we need to map it to id_petugas
-    const id_user = req.user.id;
-    const id_petugas = await getPetugasIdByUserIdService(id_user);
-    if (!id_petugas) {
-      return res
-        .status(403)
-        .json({ message: "Akun ini bukan petugas terdaftar" });
+    // Petugas: catat id_petugas berdasarkan token. Admin: izinkan tanpa keharusan menjadi petugas,
+    // gunakan id_petugas yang sudah tercatat (tetap) agar tidak merubah penugasannya.
+    let id_petugas = oldData.id_petugas || null;
+    if (req.user?.role === "petugas") {
+      const id_user = req.user.id;
+      const mapped = await getPetugasIdByUserIdService(id_user);
+      if (!mapped) {
+        return res
+          .status(403)
+          .json({ message: "Akun ini bukan petugas terdaftar" });
+      }
+      id_petugas = mapped;
     }
     await updatePengaduanStatusService(
       id,
@@ -134,6 +142,15 @@ export const updatePengaduanStatus = async (req, res) => {
       id_petugas,
       tgl_selesai
     );
+    // If pengaduan is accepted/finished, and it referenced a temporary item, approve/migrate it.
+    if (status === "Selesai" && oldData?.id_temporary) {
+      try {
+        await approveTemporaryItemService(oldData.id_temporary);
+      } catch (e) {
+        console.error("Gagal memigrasikan temporary item:", e?.message);
+        // Don't fail the main response; the status update already succeeded.
+      }
+    }
     res.json({ message: "Status pengaduan berhasil diperbarui" });
   } catch (error) {
     console.error("Error updatePengaduanStatus:", error);

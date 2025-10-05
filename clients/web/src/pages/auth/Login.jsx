@@ -6,10 +6,10 @@ import { LoginForm } from "../../components/ui/form/login-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState([]); // queue of {type, title, description, duration, onClosed}
   const { apiUrl } = useAppConfig();
-  const navigate = useNavigate();
 
   const currentAlert = alerts[0] || null;
   const pushAlert = (a) => setAlerts((prev) => [...prev, a]);

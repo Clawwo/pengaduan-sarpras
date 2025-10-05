@@ -35,8 +35,8 @@ const linkClass = ({ isActive }) =>
   }`;
 
 const PetugasLayout = () => {
-  const { apiUrl } = useAppConfig();
   const navigate = useNavigate();
+  const { apiUrl } = useAppConfig();
   const userStr =
     typeof window !== "undefined" ? localStorage.getItem("user") : null;
   const [user, setUser] = useState(userStr ? JSON.parse(userStr) : null);

@@ -6,7 +6,6 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import React from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
-import PublicRoute from "./components/PublicRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Home from "./pages/pengguna/Home";
 import Riwayat from "./pages/pengguna/Riwayat";
@@ -22,11 +21,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public routes: redirect away if already authenticated */}
-        <Route element={<PublicRoute />}>
-          <Route path="/" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         {/* User Dashboard (pengguna) */}
         <Route element={<ProtectedRoute roles={["pengguna"]} />}>
           <Route path="/dashboard" element={<DashboardLayout />}>

@@ -43,11 +43,15 @@ export const approveTemporaryItem = async (id) => {
   );
   if (!rows.length) return null;
   const tempItem = rows[0];
-  const [ins] = await pool.query(
-    "INSERT INTO pengaduan_sarpras_items (nama_item, id_lokasi) VALUES (?, ?)",
-    [tempItem.nama_barang_baru, tempItem.id_lokasi]
-  );
-  const newItemId = ins.insertId;
+  // If temporary item already linked to an official item, reuse it.
+  let newItemId = tempItem.id_item || null;
+  if (!newItemId) {
+    const [ins] = await pool.query(
+      "INSERT INTO pengaduan_sarpras_items (nama_item, id_lokasi) VALUES (?, ?)",
+      [tempItem.nama_barang_baru, tempItem.id_lokasi]
+    );
+    newItemId = ins.insertId;
+  }
   // Update all related pengaduan to reference the new official item
   await pool.query(
     "UPDATE pengaduan_sarpras_pengaduan SET id_item = ?, id_temporary = NULL WHERE id_temporary = ?",
@@ -57,7 +61,7 @@ export const approveTemporaryItem = async (id) => {
     "DELETE FROM pengaduan_sarpras_temporary_item WHERE id_temporary = ?",
     [id]
   );
-  return true;
+  return newItemId;
 };
 
 export const deleteTemporaryItem = async (id) => {

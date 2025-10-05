@@ -46,8 +46,8 @@ const linkClass = ({ isActive }) =>
   }`;
 
 const AdminLayout = () => {
-  const { apiUrl } = useAppConfig();
   const navigate = useNavigate();
+  const { apiUrl } = useAppConfig();
   const location = useLocation();
   const userStr =
     typeof window !== "undefined" ? localStorage.getItem("user") : null;
