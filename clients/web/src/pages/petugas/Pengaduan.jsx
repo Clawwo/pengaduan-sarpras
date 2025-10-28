@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Filter, Search } from "lucide-react";
+import { Clock, Filter, Search, ImageIcon, X } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -31,6 +31,12 @@ import {
 } from "@/components/ui/select";
 // Pagination will follow Riwayat.jsx simple Prev/Next; no pagination component import
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const IconCheck = (props) => (
   <svg
@@ -126,6 +132,10 @@ const Pengaduan = () => {
   const pageSize = 10;
   const filterRef = React.useRef(null);
   const [alerts, setAlerts] = useState([]); // queue alerts for popup
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -478,6 +488,96 @@ const Pengaduan = () => {
                     {current.deskripsi}
                   </div>
                 ) : null}
+
+                {/* Foto Pengaduan */}
+                {current.foto && (
+                  <div className="mt-3 pt-3 border-t border-neutral-700">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ImageIcon className="size-4 text-neutral-400" />
+                      <span className="text-xs font-medium text-neutral-400">
+                        Foto Pengaduan
+                      </span>
+                    </div>
+
+                    {/* Check if status is Ditolak */}
+                    {current.status?.toLowerCase().includes("tolak") ? (
+                      <div className="w-full rounded-md border-2 border-red-900/50 bg-red-950/30 p-6 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="p-3 rounded-full bg-red-900/30 border border-red-800/50">
+                            <svg
+                              className="size-8 text-red-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-red-300">
+                              Foto Tidak Tersedia
+                            </p>
+                            <p className="text-xs text-red-400/80 mt-1">
+                              Pengaduan ini telah ditolak
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="relative group cursor-pointer"
+                        onClick={() => {
+                          setSelectedImage(current.foto);
+                          setImageModalOpen(true);
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedImage(current.foto);
+                            setImageModalOpen(true);
+                          }
+                        }}
+                      >
+                        <img
+                          src={current.foto}
+                          alt="Foto pengaduan"
+                          className="w-full h-auto max-h-[300px] object-contain rounded-md border-2 border-neutral-700 bg-neutral-950/50 group-hover:border-orange-500 transition-all duration-200 group-hover:shadow-lg group-hover:shadow-orange-500/20"
+                          onError={(e) => {
+                            e.target.src =
+                              'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect fill="%23262626" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23737373" font-size="14"%3EGambar tidak dapat dimuat%3C/text%3E%3C/svg%3E%3C/svg%3E';
+                            e.target.className =
+                              "w-full h-auto max-h-[200px] object-contain rounded-md border-2 border-neutral-800 bg-neutral-950/50";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md flex items-end justify-center pb-4 pointer-events-none">
+                          <div className="bg-orange-500 text-white px-4 py-2 rounded-md text-sm font-medium shadow-lg flex items-center gap-2">
+                            <svg
+                              className="size-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                              />
+                            </svg>
+                            Klik untuk memperbesar
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             <div>
@@ -556,6 +656,122 @@ const Pengaduan = () => {
           </form>
         </SheetContent>
       </Sheet>
+
+      {/* Image Modal */}
+      <Dialog
+        open={imageModalOpen}
+        onOpenChange={(open) => {
+          setImageModalOpen(open);
+          if (!open) {
+            setImageLoading(true);
+            setImageError(false);
+          }
+        }}
+      >
+        <DialogContent className="border-neutral-800 bg-neutral-900/95 sm:max-w-[90vw] md:max-w-[800px] p-0 overflow-hidden">
+          <DialogHeader className="px-6 py-4 border-b border-neutral-800">
+            <DialogTitle className="text-neutral-100 flex items-center gap-2">
+              <ImageIcon className="size-5 text-orange-500" />
+              Foto Pengaduan
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="relative bg-neutral-950 flex items-center justify-center min-h-[300px] max-h-[70vh]">
+            {imageLoading && !imageError && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-neutral-700 border-t-orange-500"></div>
+                  <p className="text-sm text-neutral-400">Memuat gambar...</p>
+                </div>
+              </div>
+            )}
+
+            {imageError && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3 text-neutral-400">
+                  <svg
+                    className="size-16 text-neutral-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                  <div className="text-center">
+                    <p className="font-medium text-neutral-300">
+                      Gagal memuat gambar
+                    </p>
+                    <p className="text-sm text-neutral-500 mt-1">
+                      URL gambar mungkin tidak valid atau sudah dihapus
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedImage && (
+              <img
+                src={selectedImage}
+                alt="Foto pengaduan detail"
+                className={`w-full h-full max-h-[70vh] object-contain transition-opacity duration-300 ${
+                  imageLoading ? "opacity-0" : "opacity-100"
+                }`}
+                onLoad={() => {
+                  setImageLoading(false);
+                  setImageError(false);
+                }}
+                onError={() => {
+                  setImageLoading(false);
+                  setImageError(true);
+                }}
+              />
+            )}
+
+            {/* Close button overlay */}
+            <button
+              onClick={() => setImageModalOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-neutral-900/90 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-700 transition-colors shadow-lg z-10"
+              aria-label="Tutup"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+
+          <div className="px-6 py-4 bg-neutral-900/60 border-t border-neutral-800 flex justify-between items-center">
+            <p className="text-xs text-neutral-400">
+              Klik tombol X atau tekan ESC untuk menutup
+            </p>
+            {!imageError && (
+              <a
+                href={selectedImage}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-md bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 transition-colors"
+              >
+                <svg
+                  className="size-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+                Buka di tab baru
+              </a>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
