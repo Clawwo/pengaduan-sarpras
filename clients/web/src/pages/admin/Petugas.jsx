@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { useAppConfig } from "@/lib/useAppConfig";
 import { toast } from "react-hot-toast";
@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Plus, Search, Trash2, Users } from "lucide-react";
+import { Plus, Search, Trash2, Users, Filter } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const AdminPetugas = () => {
   const { apiUrl } = useAppConfig();
@@ -29,7 +31,10 @@ const AdminPetugas = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterGender, setFilterGender] = useState({ l: false, p: false });
   const [alerts, setAlerts] = useState([]);
+  const filterRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -65,6 +70,19 @@ const AdminPetugas = () => {
 
   useEffect(() => setPage(1), [search]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (filterRef.current && !filterRef.current.contains(e.target)) {
+        setFilterOpen(false);
+      }
+    };
+    if (filterOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [filterOpen]);
+
   const openCreate = () => {
     setUsername("");
     setPassword("");
@@ -79,6 +97,9 @@ const AdminPetugas = () => {
     e?.preventDefault?.();
     if (!username || !password || !namaPengguna || !nama || !gender) {
       return toast.error("Lengkapi semua field bertanda *");
+    }
+    if (password.length < 6) {
+      return toast.error("Password harus minimal 6 karakter");
     }
     try {
       setSaving(true);
@@ -161,13 +182,23 @@ const AdminPetugas = () => {
 
   const filtered = useMemo(() => {
     const q = (search || "").toLowerCase().trim();
+    const anyGenderFilter = filterGender.l || filterGender.p;
     return rows.filter((r) => {
+      // Filter by search
       const hay = `${r.username || ""} ${r.nama_pengguna || ""} ${
         r.nama || ""
       } ${r.gender || ""} ${r.telp || ""}`.toLowerCase();
-      return !q || hay.includes(q);
+      if (q && !hay.includes(q)) return false;
+
+      // Filter by gender
+      if (anyGenderFilter) {
+        if (r.gender === "l" && !filterGender.l) return false;
+        if (r.gender === "p" && !filterGender.p) return false;
+      }
+
+      return true;
     });
-  }, [rows, search]);
+  }, [rows, search, filterGender]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const start = (page - 1) * pageSize;
@@ -208,24 +239,65 @@ const AdminPetugas = () => {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="relative w-full sm:max-w-md">
-          <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-neutral-500">
-            <Search className="size-4" />
+        <div className="flex items-center gap-2 w-full sm:max-w-lg">
+          <div className="relative flex-1">
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-neutral-500">
+              <Search className="size-4" />
+            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari username, nama, telp..."
+              className="w-full rounded-md border border-neutral-800 bg-neutral-900/60 pl-9 pr-3 py-2 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:ring-0 focus:border-neutral-700"
+            />
           </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari username, nama, telp..."
-            className="w-full rounded-md border border-neutral-800 bg-neutral-900/60 pl-9 pr-3 py-2 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:ring-0 focus:border-neutral-700"
-          />
+          <div className="relative" ref={filterRef}>
+            <button
+              type="button"
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="inline-flex items-center gap-2 rounded-md border border-neutral-800 bg-neutral-900/60 text-neutral-300 px-3 py-2 text-sm hover:bg-neutral-800 whitespace-nowrap"
+            >
+              <Filter className="size-4" />
+              Filter
+            </button>
+            {filterOpen && (
+              <div className="absolute left-0 top-full mt-2 z-20 w-56 rounded-md border border-neutral-800 bg-neutral-900 shadow-lg">
+                <div className="p-3 space-y-3">
+                  <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wide">
+                    Gender
+                  </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                      <Checkbox
+                        checked={filterGender.l}
+                        onCheckedChange={(checked) =>
+                          setFilterGender((p) => ({ ...p, l: !!checked }))
+                        }
+                      />
+                      <span>Laki-laki</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                      <Checkbox
+                        checked={filterGender.p}
+                        onCheckedChange={(checked) =>
+                          setFilterGender((p) => ({ ...p, p: !!checked }))
+                        }
+                      />
+                      <span>Perempuan</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             className="inline-flex items-center gap-2 rounded-md border border-neutral-800 bg-neutral-900/60 text-neutral-300 px-3 py-2 text-sm hover:bg-neutral-800"
           >
-            Total: {rows.length}
+            Total: {filtered.length}
           </button>
           <button
             type="button"
@@ -241,6 +313,7 @@ const AdminPetugas = () => {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[60px]">No</TableHead>
             <TableHead>Username</TableHead>
             <TableHead>Nama Pengguna</TableHead>
             <TableHead>Nama</TableHead>
@@ -250,8 +323,11 @@ const AdminPetugas = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {pageRows.map((r) => (
+          {pageRows.map((r, idx) => (
             <TableRow key={r.id_petugas}>
+              <TableCell className="text-neutral-400">
+                {start + idx + 1}
+              </TableCell>
               <TableCell className="font-medium text-neutral-100">
                 {r.username}
               </TableCell>
@@ -276,7 +352,7 @@ const AdminPetugas = () => {
           ))}
           {filtered.length === 0 && (
             <TableRow>
-              <TableCell className="text-neutral-500 text-center" colSpan={6}>
+              <TableCell className="text-neutral-500 text-center" colSpan={7}>
                 Tidak ada petugas.
               </TableCell>
             </TableRow>
@@ -384,6 +460,9 @@ const AdminPetugas = () => {
                   className="w-full rounded-md bg-neutral-900/60 border border-neutral-800 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-0 focus:border-neutral-700 px-3 py-2.5"
                   placeholder="••••••••"
                 />
+                <p className="text-xs text-neutral-500 mt-1">
+                  Minimal 6 karakter
+                </p>
               </div>
               <div>
                 <label className="block text-sm text-neutral-300 mb-1.5">
@@ -411,26 +490,20 @@ const AdminPetugas = () => {
                 <label className="block text-sm text-neutral-300 mb-1.5">
                   Gender *
                 </label>
-                <div className="flex items-center gap-3 text-sm text-neutral-300">
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="gender"
-                      checked={gender === "l"}
-                      onChange={() => setGender("l")}
-                    />
-                    Laki-laki
+                <RadioGroup
+                  value={gender}
+                  onValueChange={setGender}
+                  className="flex items-center gap-4"
+                >
+                  <label className="inline-flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                    <RadioGroupItem value="l" />
+                    <span>Laki-laki</span>
                   </label>
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="gender"
-                      checked={gender === "p"}
-                      onChange={() => setGender("p")}
-                    />
-                    Perempuan
+                  <label className="inline-flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                    <RadioGroupItem value="p" />
+                    <span>Perempuan</span>
                   </label>
-                </div>
+                </RadioGroup>
               </div>
               <div>
                 <label className="block text-sm text-neutral-300 mb-1.5">

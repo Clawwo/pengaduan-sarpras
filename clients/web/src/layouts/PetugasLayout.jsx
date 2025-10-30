@@ -1,15 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
-import { NavLink, Outlet, Link, useNavigate } from "react-router-dom";
 import {
+  NavLink,
+  Outlet,
+  Link,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import {
+  LayoutDashboard,
   ClipboardList,
   MoreVertical,
   UserRound,
   LogOut,
   Menu,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useAppConfig } from "../lib/useAppConfig";
 import { updateMyProfile } from "../lib/utils/user";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Sheet,
   SheetContent,
@@ -24,6 +31,7 @@ import {
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
+  BreadcrumbSeparator,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 
@@ -36,6 +44,7 @@ const linkClass = ({ isActive }) =>
 
 const PetugasLayout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { apiUrl } = useAppConfig();
   const userStr =
     typeof window !== "undefined" ? localStorage.getItem("user") : null;
@@ -46,6 +55,7 @@ const PetugasLayout = () => {
   const [saving, setSaving] = useState(false);
   const [nama, setNama] = useState(user?.nama_pengguna || "");
   const [username, setUsername] = useState(user?.username || "");
+  const [alert, setAlert] = useState(null);
   const menuRef = useRef(null);
   const menuBtnRef = useRef(null);
 
@@ -92,7 +102,11 @@ const PetugasLayout = () => {
     e?.preventDefault?.();
     try {
       if (!nama && !username) {
-        toast.error("Tidak ada perubahan untuk disimpan");
+        setAlert({
+          type: "destructive",
+          title: "Perhatian",
+          description: "Tidak ada perubahan untuk disimpan",
+        });
         return;
       }
       setSaving(true);
@@ -107,14 +121,21 @@ const PetugasLayout = () => {
       };
       localStorage.setItem("user", JSON.stringify(next));
       setUser(next);
-      toast.success("Profil diperbarui");
+      setAlert({
+        type: "default",
+        title: "Berhasil",
+        description: "Profil Anda berhasil diperbarui",
+      });
       setEditOpen(false);
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message ||
+      setAlert({
+        type: "destructive",
+        title: "Gagal",
+        description:
+          err?.response?.data?.message ||
           err?.message ||
-          "Gagal memperbarui profil"
-      );
+          "Gagal memperbarui profil",
+      });
     } finally {
       setSaving(false);
     }
@@ -136,12 +157,16 @@ const PetugasLayout = () => {
             {/* Nav */}
             <nav className="p-3 space-y-1">
               <div className="text-sm font-semibold tracking-wide text-neutral-500 px-2 mb-3">
-                Operasional
+                Menu
               </div>
               <>
                 <NavLink to="/petugas" end className={linkClass}>
+                  <LayoutDashboard className="size-4 text-neutral-400" />
+                  <span>Dashboard</span>
+                </NavLink>
+                <NavLink to="/petugas/pengaduan" className={linkClass}>
                   <ClipboardList className="size-4 text-neutral-400" />
-                  <span>Daftar Pengaduan</span>
+                  <span>Kelola Pengaduan</span>
                 </NavLink>
               </>
             </nav>
@@ -225,11 +250,39 @@ const PetugasLayout = () => {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Petugas</BreadcrumbPage>
+                  {location.pathname === "/petugas" ? (
+                    <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink asChild>
+                      <Link to="/petugas">Dashboard</Link>
+                    </BreadcrumbLink>
+                  )}
                 </BreadcrumbItem>
+                {location.pathname !== "/petugas" && (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      {location.pathname.startsWith("/petugas/pengaduan") && (
+                        <BreadcrumbPage>Kelola Pengaduan</BreadcrumbPage>
+                      )}
+                    </BreadcrumbItem>
+                  </>
+                )}
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          {alert && (
+            <Alert
+              floating
+              position="top-center"
+              variant={alert.type}
+              onClose={() => setAlert(null)}
+              duration={3500}
+            >
+              <AlertTitle>{alert.title}</AlertTitle>
+              <AlertDescription>{alert.description}</AlertDescription>
+            </Alert>
+          )}
           <div className="p-4 lg:p-6">
             <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
               <Outlet />
@@ -263,8 +316,16 @@ const PetugasLayout = () => {
               className={linkClass}
               onClick={() => setNavOpen(false)}
             >
+              <LayoutDashboard className="size-4 text-neutral-400" />
+              <span>Dashboard</span>
+            </NavLink>
+            <NavLink
+              to="/petugas/pengaduan"
+              className={linkClass}
+              onClick={() => setNavOpen(false)}
+            >
               <ClipboardList className="size-4 text-neutral-400" />
-              <span>Daftar Pengaduan</span>
+              <span>Kelola Pengaduan</span>
             </NavLink>
           </nav>
           <div className="mt-6 border-t border-neutral-800 pt-4 space-y-2">

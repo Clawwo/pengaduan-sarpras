@@ -11,6 +11,7 @@ import Home from "./pages/pengguna/Home";
 import Riwayat from "./pages/pengguna/Riwayat";
 import Tambah from "./pages/pengguna/Tambah";
 import PetugasLayout from "./layouts/PetugasLayout";
+import PetugasDashboard from "./pages/petugas/Dashboard";
 import PetugasPengaduan from "./pages/petugas/Pengaduan";
 import AdminPengaduan from "./pages/admin/Pengaduan";
 import AdminPetugas from "./pages/admin/Petugas";
@@ -35,7 +36,8 @@ function App() {
         {/* Petugas Dashboard */}
         <Route element={<ProtectedRoute roles={["petugas"]} />}>
           <Route path="/petugas" element={<PetugasLayout />}>
-            <Route index element={<PetugasPengaduan />} />
+            <Route index element={<PetugasDashboard />} />
+            <Route path="pengaduan" element={<PetugasPengaduan />} />
           </Route>
         </Route>
 

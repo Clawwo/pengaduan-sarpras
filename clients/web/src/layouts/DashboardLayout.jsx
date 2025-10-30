@@ -15,9 +15,9 @@ import {
   LogOut,
   Menu,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useAppConfig } from "../lib/useAppConfig";
 import { updateMyProfile } from "../lib/utils/user";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Sheet,
   SheetContent,
@@ -56,6 +56,7 @@ const DashboardLayout = () => {
   const [saving, setSaving] = useState(false);
   const [nama, setNama] = useState(user?.nama_pengguna || "");
   const [username, setUsername] = useState(user?.username || "");
+  const [alert, setAlert] = useState(null);
   const menuRef = useRef(null);
   const menuBtnRef = useRef(null);
 
@@ -103,7 +104,11 @@ const DashboardLayout = () => {
     e?.preventDefault?.();
     try {
       if (!nama && !username) {
-        toast.error("Tidak ada perubahan untuk disimpan");
+        setAlert({
+          type: "destructive",
+          title: "Perhatian",
+          description: "Tidak ada perubahan untuk disimpan",
+        });
         return;
       }
       setSaving(true);
@@ -118,14 +123,21 @@ const DashboardLayout = () => {
       };
       localStorage.setItem("user", JSON.stringify(next));
       setUser(next);
-      toast.success("Profil diperbarui");
+      setAlert({
+        type: "default",
+        title: "Berhasil",
+        description: "Profil Anda berhasil diperbarui",
+      });
       setEditOpen(false);
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message ||
+      setAlert({
+        type: "destructive",
+        title: "Gagal",
+        description:
+          err?.response?.data?.message ||
           err?.message ||
-          "Gagal memperbarui profil"
-      );
+          "Gagal memperbarui profil",
+      });
     } finally {
       setSaving(false);
     }
@@ -133,6 +145,20 @@ const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      {/* Alert Notification */}
+      {alert && (
+        <Alert
+          floating
+          position="top-center"
+          variant={alert.type}
+          onClose={() => setAlert(null)}
+          duration={3500}
+        >
+          <AlertTitle>{alert.title}</AlertTitle>
+          <AlertDescription>{alert.description}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-12 min-h-screen">
         {/* Sidebar */}
         <aside className="hidden md:block md:col-span-3 lg:col-span-2 border-r border-neutral-800 bg-neutral-900/60 sticky top-0 h-screen overflow-hidden">
