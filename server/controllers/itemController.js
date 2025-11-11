@@ -8,10 +8,11 @@ import {
   getItemFileId,
 } from "../services/itemService.js";
 
-// GET all items
+// GET all items (with optional filter by lokasi)
 export const getAllItems = async (req, res) => {
   try {
-    const items = await getAllItemsService();
+    const { id_lokasi } = req.query;
+    const items = await getAllItemsService(id_lokasi);
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: error.message });

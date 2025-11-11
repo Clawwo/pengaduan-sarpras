@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Color scheme matching web dark theme */
+:root {
+  --background: rgb(10 10 10);
+  --foreground: rgb(250 250 250);
+  --card: rgb(23 23 23);
+  --card-foreground: rgb(250 250 250);
+  --primary: rgb(234 88 12);
+  --primary-foreground: rgb(255 255 255);
+  --secondary: rgb(38 38 38);
+  --secondary-foreground: rgb(250 250 250);
+  --muted: rgb(38 38 38);
+  --muted-foreground: rgb(163 163 163);
+  --accent: rgb(234 88 12);
+  --accent-foreground: rgb(255 255 255);
+  --destructive: rgb(239 68 68);
+  --destructive-foreground: rgb(255 255 255);
+  --border: rgb(38 38 38);
+  --input: rgb(38 38 38);
+  --ring: rgb(251 146 60);
+  --radius: 0.625rem;
+}

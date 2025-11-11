@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
 
 export function LoginForm({ className, isLoading = false, ...props }) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <form
       className={cn("flex flex-col gap-6 text-neutral-100", className)}
@@ -35,25 +38,39 @@ export function LoginForm({ className, isLoading = false, ...props }) {
           <Label htmlFor="password" className="text-neutral-300">
             Kata sandi
           </Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Masukkan Kata Sandi"
-            autoComplete="new-password"
-            required
-            className="bg-neutral-900 border-neutral-800 text-neutral-100 placeholder:text-neutral-500 transition-[box-shadow,border-color] duration-200 ease-out focus-visible:border-orange-500 focus-visible:ring-orange-500 focus-visible:ring-0.5 focus-visible:ring-offset-0/0"
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Masukkan Kata Sandi"
+              autoComplete="new-password"
+              required
+              className="bg-neutral-900 border-neutral-800 text-neutral-100 placeholder:text-neutral-500 transition-[box-shadow,border-color] duration-200 ease-out focus-visible:border-orange-500 focus-visible:ring-orange-500 focus-visible:ring-0.5 focus-visible:ring-offset-0/0 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute transition-colors -translate-y-1/2 right-3 top-1/2 text-neutral-400 hover:text-neutral-200"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </div>
         <Button
           type="submit"
-          className="w-full bg-orange-600 hover:bg-orange-500 text-white border border-orange-700 focus-visible:ring-orange-500"
+          className="w-full text-white bg-orange-600 border border-orange-700 hover:bg-orange-500 focus-visible:ring-orange-500"
           disabled={isLoading}
         >
           {isLoading ? "Memproses..." : "Masuk"}
         </Button>
       </div>
-      <div className="text-center text-sm text-neutral-400">
+      <div className="text-sm text-center text-neutral-400">
         Belum punya akun?{" "}
         <a
           href="/register"

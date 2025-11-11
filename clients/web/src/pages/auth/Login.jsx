@@ -52,7 +52,7 @@ const Login = () => {
 
   return (
     <>
-      <div className="bg-neutral-950 text-neutral-100 flex min-h-svh flex-col items-center justify-center p-6">
+      <div className="flex flex-col items-center justify-center p-6 bg-neutral-950 text-neutral-100 min-h-svh">
         {currentAlert && (
           <Alert
             floating
@@ -68,12 +68,12 @@ const Login = () => {
           </Alert>
         )}
         <div className="w-full max-w-sm">
-          <div className="mb-6 flex items-center justify-center gap-2 select-none">
-            <div className="size-9 grid place-items-center rounded-full bg-orange-600/10 text-orange-500 ring-1 ring-orange-500/30">
+          <div className="flex items-center justify-center gap-2 mb-6 select-none">
+            <div className="grid text-orange-500 rounded-full size-9 place-items-center bg-orange-600/10 ring-1 ring-orange-500/30">
               ⌘
             </div>
             <span className="font-semibold tracking-wide text-neutral-100">
-              Sarpras
+              SMKN 1 BANTUL
             </span>
           </div>
           <LoginForm onSubmit={onSubmit} isLoading={loading} />

@@ -31,10 +31,12 @@ export const getLokasiById = async (req, res) => {
 // CREATE lokasi
 export const createLokasi = async (req, res) => {
   try {
-    const { nama_lokasi } = req.body;
+    const { nama_lokasi, id_kategori } = req.body;
     if (!nama_lokasi)
       return res.status(400).json({ message: "Nama lokasi wajib diisi" });
-    const id_lokasi = await createLokasiService(nama_lokasi);
+    if (!id_kategori)
+      return res.status(400).json({ message: "Kategori lokasi wajib dipilih" });
+    const id_lokasi = await createLokasiService(nama_lokasi, id_kategori);
     res.status(201).json({
       message: "Lokasi berhasil ditambahkan",
       id_lokasi,
@@ -47,8 +49,12 @@ export const createLokasi = async (req, res) => {
 // UPDATE lokasi
 export const updateLokasi = async (req, res) => {
   try {
-    const { nama_lokasi } = req.body;
-    const affectedRows = await updateLokasiService(req.params.id, nama_lokasi);
+    const { nama_lokasi, id_kategori } = req.body;
+    if (!nama_lokasi)
+      return res.status(400).json({ message: "Nama lokasi wajib diisi" });
+    if (!id_kategori)
+      return res.status(400).json({ message: "Kategori lokasi wajib dipilih" });
+    const affectedRows = await updateLokasiService(req.params.id, nama_lokasi, id_kategori);
     if (affectedRows === 0)
       return res.status(404).json({ message: "Lokasi tidak ditemukan" });
     res.json({ message: "Lokasi berhasil diperbarui" });

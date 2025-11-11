@@ -20,6 +20,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MapPin, Plus, Search, Trash2 } from "lucide-react";
 import {
   Dialog,
@@ -44,6 +51,8 @@ const AdminLokasi = () => {
   const [mode, setMode] = useState("create");
   const [current, setCurrent] = useState(null);
   const [nama, setNama] = useState("");
+  const [idKategori, setIdKategori] = useState("");
+  const [kategoriList, setKategoriList] = useState([]);
   const [saving, setSaving] = useState(false);
   // removed filter UI and related states
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -51,6 +60,19 @@ const AdminLokasi = () => {
   const [confirmAddOpen, setConfirmAddOpen] = useState(false);
 
   useEffect(() => {
+    const fetchKategori = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const { data } = await axios.get(`${apiUrl}/api/kategori-lokasi`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setKategoriList(Array.isArray(data) ? data : data?.data || []);
+      } catch (err) {
+        console.error("Error fetching kategori:", err);
+      }
+    };
+    fetchKategori();
+
     const fetchAll = async () => {
       try {
         setLoading(true);
@@ -79,25 +101,28 @@ const AdminLokasi = () => {
     setMode("create");
     setCurrent(null);
     setNama("");
+    setIdKategori("");
     setOpen(true);
   };
   const openEdit = (row) => {
     setMode("edit");
     setCurrent(row);
     setNama(row?.nama_lokasi || "");
+    setIdKategori(row?.id_kategori?.toString() || "");
     setOpen(true);
   };
 
   const submitLokasi = async (e) => {
     e?.preventDefault?.();
     if (!nama.trim()) return toast.error("Nama lokasi wajib diisi");
+    if (!idKategori) return toast.error("Kategori lokasi wajib dipilih");
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
       if (mode === "create") {
         await axios.post(
           `${apiUrl}/api/lokasi`,
-          { nama_lokasi: nama.trim() },
+          { nama_lokasi: nama.trim(), id_kategori: parseInt(idKategori) },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success("Lokasi ditambahkan");
@@ -113,7 +138,7 @@ const AdminLokasi = () => {
       } else if (mode === "edit" && current) {
         await axios.put(
           `${apiUrl}/api/lokasi/${current.id_lokasi}`,
-          { nama_lokasi: nama.trim() },
+          { nama_lokasi: nama.trim(), id_kategori: parseInt(idKategori) },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success("Lokasi diperbarui");
@@ -277,6 +302,7 @@ const AdminLokasi = () => {
           <TableRow>
             <TableHead className="w-[60px]">No.</TableHead>
             <TableHead>Nama Lokasi</TableHead>
+            <TableHead>Kategori</TableHead>
             <TableHead className="w-[180px]">Aksi</TableHead>
           </TableRow>
         </TableHeader>
@@ -288,6 +314,9 @@ const AdminLokasi = () => {
               </TableCell>
               <TableCell className="font-medium text-neutral-100">
                 {r.nama_lokasi}
+              </TableCell>
+              <TableCell className="text-neutral-400">
+                {r.nama_kategori || "-"}
               </TableCell>
               <TableCell className="whitespace-nowrap">
                 <button
@@ -310,7 +339,7 @@ const AdminLokasi = () => {
           ))}
           {filtered.length === 0 && (
             <TableRow>
-              <TableCell className="text-neutral-500 text-center" colSpan={3}>
+              <TableCell className="text-neutral-500 text-center" colSpan={4}>
                 Tidak ada lokasi.
               </TableCell>
             </TableRow>
@@ -448,6 +477,30 @@ const AdminLokasi = () => {
             }}
             className="px-4 pb-4 space-y-4 text-[13.5px]"
           >
+            <div>
+              <label className="block text-sm text-neutral-300 mb-1.5">
+                Kategori Lokasi <span className="text-red-400">*</span>
+              </label>
+              <Select value={idKategori || undefined} onValueChange={setIdKategori}>
+                <SelectTrigger className="w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 focus-visible:border-orange-500 focus-visible:ring-0">
+                  <SelectValue placeholder="Pilih kategori" />
+                </SelectTrigger>
+                <SelectContent position="popper" className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto">
+                  {kategoriList.map((k) => (
+                    <SelectItem
+                      key={k.id_kategori}
+                      value={k.id_kategori.toString()}
+                      className="text-neutral-200 focus:bg-neutral-800 focus:text-neutral-100"
+                    >
+                      {k.nama_kategori}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-1.5 text-xs text-neutral-500">
+                Pilih kategori untuk mengelompokkan lokasi ini.
+              </p>
+            </div>
             <div>
               <label className="block text-sm text-neutral-300 mb-1.5">
                 Nama Lokasi <span className="text-red-400">*</span>

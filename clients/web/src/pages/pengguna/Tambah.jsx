@@ -23,6 +23,14 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const fieldFocus = "focus-visible:border-orange-500 focus-visible:ring-0";
 const textareaBase = `w-full min-w-0 rounded-md border bg-neutral-900/60 border-neutral-700 px-3 py-2 text-sm outline-none text-neutral-100 placeholder:text-neutral-500 ${fieldFocus}`;
@@ -32,24 +40,44 @@ const Tambah = () => {
   const [nama_pengaduan, setNama] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
   const [id_item, setItem] = useState("");
+  const [id_kategori, setKategori] = useState("");
   const [id_lokasi, setLokasi] = useState("");
   const [foto, setFoto] = useState(null);
   const [items, setItems] = useState([]);
+  const [kategoriLokasi, setKategoriLokasi] = useState([]);
+  const [allLokasi, setAllLokasiList] = useState([]);
+  const [filteredLokasi, setFilteredLokasi] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [customItem, setCustomItem] = useState("");
   const [showCustomItem, setShowCustomItem] = useState(false);
-  const [lokasi, setLokasiList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [alerts, setAlerts] = useState([]); // queue of { type, title, description, duration, onClosed }
   const fileRef = useRef(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const [i, l] = await Promise.all([getItems(apiUrl), getLokasi(apiUrl)]);
-        setItems(i);
-        setLokasiList(l);
+        const token = localStorage.getItem("token");
+        const [i, l, kResponse] = await Promise.all([
+          getItems(apiUrl),
+          getLokasi(apiUrl),
+          fetch(`${apiUrl}/api/kategori-lokasi`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((r) => r.json()),
+        ]);
+
+        // Extract data from response object
+        const k = kResponse?.data || kResponse;
+
+        console.log("Kategori Lokasi Response:", kResponse);
+        console.log("Kategori Lokasi Data:", k);
+
+        setItems(Array.isArray(i) ? i : []);
+        setAllLokasiList(Array.isArray(l) ? l : []);
+        setKategoriLokasi(Array.isArray(k) ? k : []);
       } catch (err) {
+        console.error("Error loading reference data:", err);
         toast.error(
           err?.response?.data?.message ||
             err.message ||
@@ -58,6 +86,25 @@ const Tambah = () => {
       }
     })();
   }, [apiUrl]);
+
+  // Filter lokasi by kategori
+  useEffect(() => {
+    if (!id_kategori) {
+      setFilteredLokasi([]);
+      setLokasi("");
+      setItem("");
+      setShowCustomItem(false);
+      setCustomItem("");
+      return;
+    }
+    setFilteredLokasi(
+      allLokasi.filter((lok) => String(lok.id_kategori) === String(id_kategori))
+    );
+    setLokasi("");
+    setItem("");
+    setShowCustomItem(false);
+    setCustomItem("");
+  }, [id_kategori, allLokasi]);
 
   // Filter items by lokasi
   useEffect(() => {
@@ -90,9 +137,12 @@ const Tambah = () => {
   const resetForm = () => {
     setNama("");
     setDeskripsi("");
+    setKategori("");
     setItem("");
     setLokasi("");
     setFoto(null);
+    setCustomItem("");
+    setShowCustomItem(false);
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -112,8 +162,14 @@ const Tambah = () => {
       ]);
       return;
     }
+    // Open confirmation modal instead of submitting directly
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSubmit = async () => {
     try {
       setLoading(true);
+      setConfirmOpen(false);
       let usedItemId = id_item;
       // For custom items, rely on server to create the temporary item and keep id_item null
       if (showCustomItem && customItem.trim()) {
@@ -305,95 +361,134 @@ const Tambah = () => {
                 />
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4 items-start">
+              <div className="grid gap-4">
                 <div className="grid gap-1.5">
                   <label className="text-sm font-medium text-neutral-300">
-                    Lokasi
+                    Kategori Lokasi
                   </label>
-                  <Select value={id_lokasi} onValueChange={setLokasi}>
+                  <Select value={id_kategori} onValueChange={setKategori}>
                     <SelectTrigger
                       className={`w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 ${fieldFocus}`}
                     >
-                      <SelectValue placeholder="Pilih lokasi" />
+                      <SelectValue placeholder="Pilih kategori lokasi" />
                     </SelectTrigger>
                     <SelectContent
                       position="popper"
                       className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
                     >
-                      {lokasi.map((l) => (
-                        <SelectItem
-                          key={l.id_lokasi}
-                          value={String(l.id_lokasi)}
-                          className="text-neutral-200 focus:bg-neutral-800 focus:text-neutral-100"
-                        >
-                          {l.nama_lokasi}
-                        </SelectItem>
-                      ))}
+                      {Array.isArray(kategoriLokasi) &&
+                        kategoriLokasi.map((k) => (
+                          <SelectItem
+                            key={k.id_kategori}
+                            value={String(k.id_kategori)}
+                            className="text-neutral-200 focus:bg-neutral-800 focus:text-neutral-100"
+                          >
+                            {k.nama_kategori}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-1.5">
-                  <label className="text-sm font-medium text-neutral-300">
-                    Item
-                  </label>
-                  <Select
-                    value={id_item}
-                    onValueChange={(val) => {
-                      setItem(val);
-                      setShowCustomItem(val === "CUSTOM");
-                    }}
-                    disabled={!id_lokasi}
-                  >
-                    <SelectTrigger
-                      className={`w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 ${fieldFocus}`}
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid gap-1.5">
+                    <label className="text-sm font-medium text-neutral-300">
+                      Lokasi
+                    </label>
+                    <Select
+                      value={id_lokasi}
+                      onValueChange={setLokasi}
+                      disabled={!id_kategori}
                     >
-                      <SelectValue
-                        placeholder={
-                          id_lokasi ? "Pilih item" : "Pilih lokasi dulu"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent
-                      position="popper"
-                      className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
-                    >
-                      {filteredItems.map((it) => (
-                        <SelectItem
-                          key={it.id_item}
-                          value={String(it.id_item)}
-                          className="text-neutral-200 focus:bg-neutral-800 focus:text-neutral-100"
-                        >
-                          {it.nama_item}
-                        </SelectItem>
-                      ))}
-                      <SelectItem
-                        value="CUSTOM"
-                        className="text-orange-400 focus:bg-neutral-800 focus:text-orange-400"
+                      <SelectTrigger
+                        className={`w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 ${fieldFocus}`}
                       >
-                        Item lainnya...
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                        <SelectValue
+                          placeholder={
+                            id_kategori ? "Pilih lokasi" : "Pilih kategori dulu"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent
+                        position="popper"
+                        className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
+                      >
+                        {Array.isArray(filteredLokasi) &&
+                          filteredLokasi.map((l) => (
+                            <SelectItem
+                              key={l.id_lokasi}
+                              value={String(l.id_lokasi)}
+                              className="text-neutral-200 focus:bg-neutral-800 focus:text-neutral-100"
+                            >
+                              {l.nama_lokasi}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-sm font-medium text-neutral-300">
+                      Item
+                    </label>
+                    <Select
+                      value={id_item}
+                      onValueChange={(val) => {
+                        setItem(val);
+                        setShowCustomItem(val === "CUSTOM");
+                      }}
+                      disabled={!id_lokasi}
+                    >
+                      <SelectTrigger
+                        className={`w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 ${fieldFocus}`}
+                      >
+                        <SelectValue
+                          placeholder={
+                            id_lokasi ? "Pilih item" : "Pilih lokasi dulu"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent
+                        position="popper"
+                        className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
+                      >
+                        {Array.isArray(filteredItems) &&
+                          filteredItems.map((it) => (
+                            <SelectItem
+                              key={it.id_item}
+                              value={String(it.id_item)}
+                              className="text-neutral-200 focus:bg-neutral-800 focus:text-neutral-100"
+                            >
+                              {it.nama_item}
+                            </SelectItem>
+                          ))}
+                        <SelectItem
+                          value="CUSTOM"
+                          className="text-orange-400 focus:bg-neutral-800 focus:text-orange-400"
+                        >
+                          Item lainnya...
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+
                 {showCustomItem && (
-                  <div className="sm:col-span-2">
-                    <div className="grid gap-1.5">
-                      <label className="text-sm font-medium text-neutral-300">
-                        Nama Item Baru
-                      </label>
-                      <input
-                        type="text"
-                        value={customItem}
-                        onChange={(e) => setCustomItem(e.target.value)}
-                        className={`w-full rounded-md border bg-neutral-900/60 border-neutral-700 px-3 py-2 text-sm outline-none text-neutral-100 placeholder:text-neutral-500 ${fieldFocus}`}
-                        placeholder="Masukkan nama item baru..."
-                        required
-                      />
-                      <p className="text-xs text-orange-400">
-                        Item baru akan diverifikasi petugas sebelum bisa
-                        digunakan.
-                      </p>
-                    </div>
+                  <div className="grid gap-1.5">
+                    <label className="text-sm font-medium text-neutral-300">
+                      Nama Item Baru
+                    </label>
+                    <input
+                      type="text"
+                      value={customItem}
+                      onChange={(e) => setCustomItem(e.target.value)}
+                      className={`w-full rounded-md border bg-neutral-900/60 border-neutral-700 px-3 py-2 text-sm outline-none text-neutral-100 placeholder:text-neutral-500 ${fieldFocus}`}
+                      placeholder="Masukkan nama item baru..."
+                      required
+                    />
+                    <p className="text-xs text-orange-400">
+                      Item baru akan diverifikasi petugas sebelum bisa
+                      digunakan.
+                    </p>
                   </div>
                 )}
               </div>
@@ -418,6 +513,97 @@ const Tambah = () => {
           </form>
         </CardContent>
       </Card>
+
+      {/* Modal Konfirmasi */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="bg-neutral-900/95 border-neutral-800 sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-neutral-100 flex items-center gap-2">
+              <Send className="size-5 text-orange-500" />
+              Konfirmasi Pengaduan
+            </DialogTitle>
+            <DialogDescription className="text-neutral-400">
+              Pastikan data pengaduan Anda sudah benar sebelum mengirim.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-4">
+            <div className="bg-neutral-800/40 rounded-md p-3 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-400">Nama Pengaduan:</span>
+                <span className="text-neutral-100 font-medium">{nama_pengaduan}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-400">Lokasi:</span>
+                <span className="text-neutral-100">
+                  {filteredLokasi.find((l) => String(l.id_lokasi) === String(id_lokasi))?.nama_lokasi || "-"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-400">Item:</span>
+                <span className="text-neutral-100">
+                  {showCustomItem ? (
+                    <span>
+                      {customItem} <span className="text-amber-400 text-xs italic">(item baru)</span>
+                    </span>
+                  ) : (
+                    filteredItems.find((i) => String(i.id_item) === String(id_item))?.nama_item || "-"
+                  )}
+                </span>
+              </div>
+              {deskripsi && (
+                <div className="pt-2 border-t border-neutral-700">
+                  <span className="text-neutral-400 block mb-1">Deskripsi:</span>
+                  <span className="text-neutral-100 text-xs">{deskripsi}</span>
+                </div>
+              )}
+              {foto && (
+                <div className="pt-2 border-t border-neutral-700">
+                  <span className="text-neutral-400 block mb-1">Foto:</span>
+                  <span className="text-green-400 text-xs">✓ Foto terlampir</span>
+                </div>
+              )}
+            </div>
+
+            {showCustomItem && (
+              <div className="bg-amber-900/20 border border-amber-700/30 rounded-md p-3">
+                <p className="text-xs text-amber-300">
+                  <strong>Catatan:</strong> Item baru yang Anda ajukan akan diverifikasi oleh petugas terlebih dahulu.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(false)}
+              disabled={loading}
+              className="px-4 py-2 text-sm rounded-md border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition-colors disabled:opacity-50"
+            >
+              Periksa Kembali
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmSubmit}
+              disabled={loading}
+              className="px-4 py-2 text-sm rounded-md bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60 transition-colors flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Mengirim...
+                </>
+              ) : (
+                <>
+                  <Send className="size-4" />
+                  Kirim Pengaduan
+                </>
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -12,6 +12,7 @@ import {
   updatePengaduanStatus as updatePengaduanStatusService,
   getPengaduanReport as getPengaduanReportService,
 } from "../services/pengaduanService.js";
+import { createRiwayatAksi as createRiwayatAksiService } from "../services/riwayatAksiService.js";
 
 export const createPengaduan = async (req, res) => {
   try {
@@ -19,13 +20,16 @@ export const createPengaduan = async (req, res) => {
       req.body;
     const id_user = req.user.id;
 
+    // Get id_temporary from body if provided (already created by client)
+    let id_temporary_from_body = req.body.id_temporary || null;
+
     if (!nama_pengaduan || !id_lokasi) {
       return res
         .status(400)
         .json({ message: "Nama pengaduan dan lokasi wajib diisi" });
     }
-    // Require either existing item or a new item name
-    if (!id_item && !nama_item_baru) {
+    // Require either existing item, new item name, or temporary item id
+    if (!id_item && !nama_item_baru && !id_temporary_from_body) {
       return res.status(400).json({ message: "Pilih item atau isi item baru" });
     }
 
@@ -42,11 +46,11 @@ export const createPengaduan = async (req, res) => {
       fileId = uploadResponse.fileId;
     }
 
-    // If user proposes a new item, create a temporary item entry first
-    let id_temporary = null;
-    if (!id_item && nama_item_baru) {
+    // If user proposes a new item via nama_item_baru, create a temporary item entry
+    let final_id_temporary = id_temporary_from_body;
+    if (!id_item && !final_id_temporary && nama_item_baru) {
       try {
-        id_temporary = await createTemporaryItemService(
+        final_id_temporary = await createTemporaryItemService(
           nama_item_baru,
           id_lokasi
         );
@@ -67,7 +71,7 @@ export const createPengaduan = async (req, res) => {
       // Pass null when item is proposed and awaiting approval
       id_item: id_item || null,
       id_lokasi,
-      id_temporary,
+      id_temporary: final_id_temporary,
     });
 
     res.status(201).json({ message: "Pengaduan berhasil diajukan" });
@@ -142,15 +146,26 @@ export const updatePengaduanStatus = async (req, res) => {
       id_petugas,
       tgl_selesai
     );
-    // If pengaduan is accepted/finished, and it referenced a temporary item, approve/migrate it.
-    if (status === "Selesai" && oldData?.id_temporary) {
-      try {
-        await approveTemporaryItemService(oldData.id_temporary);
-      } catch (e) {
-        console.error("Gagal memigrasikan temporary item:", e?.message);
-        // Don't fail the main response; the status update already succeeded.
-      }
+
+    // Catat riwayat aksi petugas/admin
+    try {
+      await createRiwayatAksiService({
+        id_pengaduan: id,
+        id_petugas: id_petugas,
+        id_user: req.user.id,
+        role_user: req.user.role,
+        aksi: `Update Status ke ${status}`,
+        status_sebelumnya: oldData.status,
+        status_baru: status,
+        saran_petugas: saran_petugas,
+      });
+    } catch (logError) {
+      // Log error tapi tidak menggagalkan update status
+      console.error("Gagal mencatat riwayat aksi:", logError);
     }
+
+    // Note: Temporary items are NOT auto-approved when status changes.
+    // Admin must manually approve them via the temporary items moderation page.
     res.json({ message: "Status pengaduan berhasil diperbarui" });
   } catch (error) {
     console.error("Error updatePengaduanStatus:", error);

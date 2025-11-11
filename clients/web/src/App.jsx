@@ -14,9 +14,11 @@ import PetugasLayout from "./layouts/PetugasLayout";
 import PetugasDashboard from "./pages/petugas/Dashboard";
 import PetugasPengaduan from "./pages/petugas/Pengaduan";
 import AdminPengaduan from "./pages/admin/Pengaduan";
+import AdminRiwayatAksi from "./pages/admin/RiwayatAksi";
 import AdminPetugas from "./pages/admin/Petugas";
 import AdminItems from "./pages/admin/Items";
 import AdminLokasi from "./pages/admin/Lokasi";
+import AdminTemporaryItems from "./pages/admin/TemporaryItems";
 
 function App() {
   return (
@@ -46,9 +48,11 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="pengaduan" element={<AdminPengaduan />} />
+            <Route path="riwayat-aksi" element={<AdminRiwayatAksi />} />
             <Route path="petugas" element={<AdminPetugas />} />
             <Route path="items" element={<AdminItems />} />
             <Route path="lokasi" element={<AdminLokasi />} />
+            <Route path="temporary-items" element={<AdminTemporaryItems />} />
           </Route>
         </Route>
       </Routes>

@@ -1,11 +1,22 @@
 import pool from "../config/dbConfig.js";
 
-export const getAllItems = async () => {
-  const [rows] = await pool.query(`
+export const getAllItems = async (id_lokasi = null) => {
+  let query = `
     SELECT i.id_item, i.nama_item, i.deskripsi, i.foto, i.file_id, i.id_lokasi, l.nama_lokasi
     FROM pengaduan_sarpras_items i
     LEFT JOIN pengaduan_sarpras_lokasi l ON i.id_lokasi = l.id_lokasi
-  `);
+  `;
+
+  const params = [];
+
+  if (id_lokasi) {
+    query += ` WHERE i.id_lokasi = ?`;
+    params.push(id_lokasi);
+  }
+
+  query += ` ORDER BY i.id_item DESC`;
+
+  const [rows] = await pool.query(query, params);
   return rows;
 };
 

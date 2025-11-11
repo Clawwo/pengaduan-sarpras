@@ -47,10 +47,10 @@ export const createPengaduan = async (data) => {
     id_lokasi,
     id_temporary,
   } = data;
-  await pool.query(
-    `INSERT INTO pengaduan_sarpras_pengaduan 
-      (nama_pengaduan, deskripsi, foto, file_id, id_user, id_item, id_lokasi, id_temporary, status, tgl_pengajuan) 
-     VALUES (?,?,?,?,?,?,?,?, 'Diajukan', CURDATE())`,
+
+  // Call stored procedure with OUT parameters
+  const [result] = await pool.query(
+    "CALL sp_create_pengaduan(?, ?, ?, ?, ?, ?, ?, ?, @new_id, @status_code, @message)",
     [
       nama_pengaduan,
       deskripsi || null,
@@ -62,6 +62,20 @@ export const createPengaduan = async (data) => {
       id_temporary || null,
     ]
   );
+
+  // Get OUT parameters
+  const [outParams] = await pool.query(
+    "SELECT @new_id as newId, @status_code as statusCode, @message as message"
+  );
+
+  const { newId, statusCode, message } = outParams[0];
+
+  // Handle errors based on status code
+  if (statusCode === 500) {
+    throw new Error(message || "Database error occurred");
+  }
+
+  return newId;
 };
 
 export const getAllPengaduan = async () => {
@@ -107,10 +121,25 @@ export const updatePengaduanStatus = async (
   id_petugas,
   tgl_selesai
 ) => {
-  await pool.query(
-    `UPDATE pengaduan_sarpras_pengaduan 
-     SET status = ?, id_petugas = ?, saran_petugas = ?, tgl_selesai = ? 
-     WHERE id_pengaduan = ?`,
-    [status, id_petugas, saran_petugas || null, tgl_selesai, id_pengaduan]
+  // Call stored procedure with OUT parameters
+  const [result] = await pool.query(
+    "CALL sp_update_pengaduan_status(?, ?, ?, ?, ?, @status_code, @message)",
+    [id_pengaduan, status, saran_petugas || null, id_petugas, tgl_selesai]
   );
+
+  // Get OUT parameters
+  const [outParams] = await pool.query(
+    "SELECT @status_code as statusCode, @message as message"
+  );
+
+  const { statusCode, message } = outParams[0];
+
+  // Handle errors based on status code
+  if (statusCode === 404) {
+    throw new Error(message || "Pengaduan tidak ditemukan");
+  } else if (statusCode === 500) {
+    throw new Error(message || "Database error occurred");
+  }
+
+  return true;
 };

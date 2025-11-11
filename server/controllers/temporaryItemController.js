@@ -4,6 +4,7 @@ import {
   createTemporaryItem as createTemporaryItemService,
   updateTemporaryItem as updateTemporaryItemService,
   approveTemporaryItem as approveTemporaryItemService,
+  rejectTemporaryItem as rejectTemporaryItemService,
   deleteTemporaryItem as deleteTemporaryItemService,
 } from "../services/temporaryItemService.js";
 
@@ -69,14 +70,49 @@ export const updateTemporaryItem = async (req, res) => {
 export const approveTemporaryItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await approveTemporaryItemService(id);
-    if (!result)
-      return res
-        .status(404)
-        .json({ message: "Temporary item tidak ditemukan" });
-    res.json({ message: "Item berhasil dipindahkan ke items resmi" });
+    const id_admin = req.user?.id;
+
+    if (!id_admin) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const newItemId = await approveTemporaryItemService(id, id_admin);
+    res.json({
+      message:
+        "Item temporary berhasil disetujui dan dipromosikan ke item resmi",
+      id_item: newItemId,
+    });
   } catch (error) {
-    console.error(error);
+    console.error("Error approveTemporaryItem:", error);
+    if (
+      error.message.includes("sudah disetujui") ||
+      error.message.includes("tidak ditemukan")
+    ) {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Terjadi kesalahan server" });
+  }
+};
+
+export const rejectTemporaryItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const id_admin = req.user?.id;
+
+    if (!id_admin) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    await rejectTemporaryItemService(id, id_admin);
+    res.json({ message: "Item temporary berhasil ditolak" });
+  } catch (error) {
+    console.error("Error rejectTemporaryItem:", error);
+    if (
+      error.message.includes("sudah diproses") ||
+      error.message.includes("tidak ditemukan")
+    ) {
+      return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 };

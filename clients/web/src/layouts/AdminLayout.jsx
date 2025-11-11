@@ -12,10 +12,12 @@ import {
   ClipboardList,
   MapPin,
   Package,
+  Clock,
   MoreVertical,
   UserRound,
   LogOut,
   Menu,
+  History,
 } from "lucide-react";
 import { useAppConfig } from "../lib/useAppConfig";
 import { updateMyProfile } from "../lib/utils/user";
@@ -184,6 +186,10 @@ const AdminLayout = () => {
                 <ClipboardList className="size-4 text-neutral-400" />
                 <span>Pengaduan</span>
               </NavLink>
+              <NavLink to="/admin/riwayat-aksi" className={linkClass}>
+                <History className="size-4 text-neutral-400" />
+                <span>Riwayat Aksi</span>
+              </NavLink>
               <NavLink to="/admin/petugas" className={linkClass}>
                 <Users2 className="size-4 text-neutral-400" />
                 <span>Petugas</span>
@@ -195,6 +201,10 @@ const AdminLayout = () => {
               <NavLink to="/admin/lokasi" className={linkClass}>
                 <MapPin className="size-4 text-neutral-400" />
                 <span>Lokasi</span>
+              </NavLink>
+              <NavLink to="/admin/temporary-items" className={linkClass}>
+                <Clock className="size-4 text-neutral-400" />
+                <span>Item Temporary</span>
               </NavLink>
             </nav>
             {/* Spacer */}
@@ -291,6 +301,9 @@ const AdminLayout = () => {
                       {location.pathname.startsWith("/admin/pengaduan") && (
                         <BreadcrumbPage>Pengaduan</BreadcrumbPage>
                       )}
+                      {location.pathname.startsWith("/admin/riwayat-aksi") && (
+                        <BreadcrumbPage>Riwayat Aksi</BreadcrumbPage>
+                      )}
                       {location.pathname.startsWith("/admin/petugas") && (
                         <BreadcrumbPage>Petugas</BreadcrumbPage>
                       )}
@@ -300,6 +313,9 @@ const AdminLayout = () => {
                       {location.pathname.startsWith("/admin/lokasi") && (
                         <BreadcrumbPage>Lokasi</BreadcrumbPage>
                       )}
+                      {location.pathname.startsWith(
+                        "/admin/temporary-items"
+                      ) && <BreadcrumbPage>Item Temporary</BreadcrumbPage>}
                     </BreadcrumbItem>
                   </>
                 )}
@@ -351,6 +367,14 @@ const AdminLayout = () => {
               <span>Pengaduan</span>
             </NavLink>
             <NavLink
+              to="/admin/riwayat-aksi"
+              className={linkClass}
+              onClick={() => setNavOpen(false)}
+            >
+              <History className="size-4 text-neutral-400" />
+              <span>Riwayat Aksi</span>
+            </NavLink>
+            <NavLink
               to="/admin/petugas"
               className={linkClass}
               onClick={() => setNavOpen(false)}
@@ -373,6 +397,14 @@ const AdminLayout = () => {
             >
               <MapPin className="size-4 text-neutral-400" />
               <span>Lokasi</span>
+            </NavLink>
+            <NavLink
+              to="/admin/temporary-items"
+              className={linkClass}
+              onClick={() => setNavOpen(false)}
+            >
+              <Clock className="size-4 text-neutral-400" />
+              <span>Item Temporary</span>
             </NavLink>
           </nav>
         </SheetContent>

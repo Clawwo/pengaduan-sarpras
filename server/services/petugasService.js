@@ -5,7 +5,8 @@ export const getPetugas = async () => {
     SELECT p.id_petugas, u.id_user, u.username, u.nama_pengguna, u.role, 
            p.nama, p.gender, p.telp
     FROM pengaduan_sarpras_petugas p
-    JOIN pengaduan_sarpras_user u ON p.id_user = u.id_user`);
+    JOIN pengaduan_sarpras_user u ON p.id_user = u.id_user
+    ORDER BY p.id_petugas DESC`);
   return rows;
 };
 

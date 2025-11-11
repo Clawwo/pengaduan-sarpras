@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Eye, EyeOff } from "lucide-react";
 
 export function RegisterForm({
   className,
@@ -15,6 +16,9 @@ export function RegisterForm({
   // ...rest props forwarded to <form>
   ...props
 }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <form
       className={cn("flex flex-col gap-6 text-neutral-100", className)}
@@ -86,18 +90,32 @@ export function RegisterForm({
           >
             Password
           </label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Masukkan Password"
-            autoComplete="new-password"
-            required
-            className="bg-neutral-900 border-neutral-800 text-neutral-100 placeholder:text-neutral-500 transition-[box-shadow,border-color] duration-200 ease-out focus-visible:border-orange-500 focus-visible:ring-orange-500 focus-visible:ring-0.5"
-            onChange={onPasswordChange}
-            aria-invalid={!!isPasswordInvalid}
-            aria-describedby="password-hint"
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Masukkan Password"
+              autoComplete="new-password"
+              required
+              className="bg-neutral-900 border-neutral-800 text-neutral-100 placeholder:text-neutral-500 transition-[box-shadow,border-color] duration-200 ease-out focus-visible:border-orange-500 focus-visible:ring-orange-500 focus-visible:ring-0.5 pr-10"
+              onChange={onPasswordChange}
+              aria-invalid={!!isPasswordInvalid}
+              aria-describedby="password-hint"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-200 transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
           {/* Static helper hint (turns red when invalid if prop provided) */}
           <p
             id="password-hint"
@@ -117,15 +135,29 @@ export function RegisterForm({
           >
             Konfirmasi Password
           </label>
-          <Input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            placeholder="Ulangi Password"
-            autoComplete="new-password"
-            required
-            className="bg-neutral-900 border-neutral-800 text-neutral-100 placeholder:text-neutral-500 transition-[box-shadow,border-color] duration-200 ease-out focus-visible:border-orange-500 focus-visible:ring-orange-500 focus-visible:ring-0.5"
-          />
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Ulangi Password"
+              autoComplete="new-password"
+              required
+              className="bg-neutral-900 border-neutral-800 text-neutral-100 placeholder:text-neutral-500 transition-[box-shadow,border-color] duration-200 ease-out focus-visible:border-orange-500 focus-visible:ring-orange-500 focus-visible:ring-0.5 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-200 transition-colors"
+              tabIndex={-1}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
 
         <Button
