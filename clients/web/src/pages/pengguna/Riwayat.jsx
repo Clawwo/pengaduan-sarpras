@@ -10,8 +10,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Clock, History as HistoryIcon, Filter, Search } from "lucide-react";
+import {
+  Clock,
+  History as HistoryIcon,
+  Filter,
+  Search,
+  Eye,
+  X,
+  Calendar,
+  MapPin,
+  Package,
+  FileText,
+  User,
+  Image as ImageIcon,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Riwayat = () => {
   const { apiUrl } = useAppConfig();
@@ -22,7 +41,9 @@ const Riwayat = () => {
   const pageSize = 10;
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
-  const [selectedStatuses, setSelectedStatuses] = useState(new Set()); // empty = all
+  const [selectedStatuses, setSelectedStatuses] = useState(new Set());
+  const [selectedPengaduan, setSelectedPengaduan] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
   const filterRef = useRef(null);
 
   // Close filter popover on outside click
@@ -170,6 +191,11 @@ const Riwayat = () => {
   const startItem = filteredRows.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = Math.min(filteredRows.length, page * pageSize);
 
+  const handleViewDetail = (pengaduan) => {
+    setSelectedPengaduan(pengaduan);
+    setShowDetail(true);
+  };
+
   if (loading) return <div className="text-neutral-300">Memuat...</div>;
   if (error) return <div className="text-red-400">{error}</div>;
 
@@ -280,8 +306,8 @@ const Riwayat = () => {
             <TableHead>Nama Pengaduan</TableHead>
             <TableHead>Item</TableHead>
             <TableHead>Lokasi</TableHead>
-            <TableHead>Deskripsi</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead className="text-center">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -306,15 +332,16 @@ const Riwayat = () => {
                 </div>
               </TableCell>
               <TableCell>{r.nama_lokasi}</TableCell>
-              <TableCell
-                title={r.deskripsi || "-"}
-                className="truncate max-w-[360px]"
-              >
-                {r?.deskripsi && r.deskripsi.length > 140
-                  ? `${r.deskripsi.slice(0, 140)}...`
-                  : r.deskripsi || "-"}
-              </TableCell>
               <TableCell>{renderStatus(r.status)}</TableCell>
+              <TableCell className="text-center">
+                <button
+                  onClick={() => handleViewDetail(r)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-neutral-800 bg-neutral-900/60 text-neutral-300 hover:bg-neutral-800 transition-colors"
+                >
+                  <Eye className="size-4" />
+                  Detail
+                </button>
+              </TableCell>
             </TableRow>
           ))}
           {!loading && filteredRows.length === 0 && (
@@ -356,6 +383,171 @@ const Riwayat = () => {
           </button>
         </div>
       </div>
+
+      {/* Modal Detail Pengaduan */}
+      <Dialog open={showDetail} onOpenChange={setShowDetail}>
+        <DialogContent className="max-w-2xl bg-neutral-900 border-neutral-800 text-neutral-100">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+              <Eye className="size-5 text-orange-400" />
+              Detail Pengaduan
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedPengaduan && (
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <FileText className="size-4" />
+                    Nama Pengaduan
+                  </div>
+                  <div className="text-neutral-100 font-medium">
+                    {selectedPengaduan.nama_pengaduan}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <Calendar className="size-4" />
+                    Tanggal Pengajuan
+                  </div>
+                  <div className="text-neutral-100">
+                    {new Date(
+                      selectedPengaduan.created_at ||
+                        selectedPengaduan.tgl_pengajuan
+                    ).toLocaleDateString("id-ID", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <Package className="size-4" />
+                    Item
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-neutral-100">
+                      {selectedPengaduan.nama_item}
+                    </span>
+                    {selectedPengaduan.id_temporary && (
+                      <Badge variant="warning" className="text-xs">
+                        Item Sementara
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <MapPin className="size-4" />
+                    Lokasi
+                  </div>
+                  <div className="text-neutral-100">
+                    {selectedPengaduan.nama_lokasi}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <Clock className="size-4" />
+                    Status
+                  </div>
+                  <div>{renderStatus(selectedPengaduan.status)}</div>
+                </div>
+
+                {selectedPengaduan.nama_petugas && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-neutral-400">
+                      <User className="size-4" />
+                      Petugas
+                    </div>
+                    <div className="text-neutral-100">
+                      {selectedPengaduan.nama_petugas}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {selectedPengaduan.deskripsi && (
+                <div className="space-y-2 pt-2 border-t border-neutral-800">
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <FileText className="size-4" />
+                    Deskripsi
+                  </div>
+                  <div className="text-neutral-200 text-sm bg-neutral-800/40 rounded-lg p-3 whitespace-pre-wrap">
+                    {selectedPengaduan.deskripsi}
+                  </div>
+                </div>
+              )}
+
+              {selectedPengaduan.saran_petugas && (
+                <div className="space-y-2 pt-2 border-t border-neutral-800">
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <User className="size-4" />
+                    Saran dari Petugas
+                  </div>
+                  <div className="text-neutral-200 text-sm bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 whitespace-pre-wrap">
+                    {selectedPengaduan.saran_petugas}
+                  </div>
+                </div>
+              )}
+
+              {selectedPengaduan.foto && (
+                <div className="space-y-2 pt-2 border-t border-neutral-800">
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <ImageIcon className="size-4" />
+                    Foto Pengaduan
+                  </div>
+                  <div className="relative rounded-lg overflow-hidden border border-neutral-800">
+                    <img
+                      src={selectedPengaduan.foto}
+                      alt="Foto Pengaduan"
+                      className="w-full h-auto max-h-96 object-contain bg-neutral-950"
+                      onError={(e) => {
+                        e.target.src = "/placeholder-image.png";
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {selectedPengaduan.tgl_selesai && (
+                <div className="space-y-1 pt-2 border-t border-neutral-800">
+                  <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <Calendar className="size-4" />
+                    Tanggal Selesai
+                  </div>
+                  <div className="text-neutral-100">
+                    {new Date(selectedPengaduan.tgl_selesai).toLocaleDateString(
+                      "id-ID",
+                      {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-neutral-800">
+            <button
+              onClick={() => setShowDetail(false)}
+              className="px-4 py-2 rounded-md border border-neutral-800 bg-neutral-900/60 text-neutral-300 hover:bg-neutral-800 transition-colors"
+            >
+              Tutup
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

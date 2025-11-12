@@ -4,6 +4,7 @@ import {
   createLokasi as createLokasiService,
   updateLokasi as updateLokasiService,
   deleteLokasi as deleteLokasiService,
+  checkDuplicateLokasiName as checkDuplicateLokasiNameService,
 } from "../services/lokasiService.js";
 
 // GET all lokasi
@@ -36,6 +37,15 @@ export const createLokasi = async (req, res) => {
       return res.status(400).json({ message: "Nama lokasi wajib diisi" });
     if (!id_kategori)
       return res.status(400).json({ message: "Kategori lokasi wajib dipilih" });
+    
+    // Check for duplicate name
+    const isDuplicate = await checkDuplicateLokasiNameService(nama_lokasi);
+    if (isDuplicate) {
+      return res.status(400).json({ 
+        message: "Nama lokasi sudah ada. Gunakan nama yang berbeda." 
+      });
+    }
+    
     const id_lokasi = await createLokasiService(nama_lokasi, id_kategori);
     res.status(201).json({
       message: "Lokasi berhasil ditambahkan",
@@ -54,7 +64,20 @@ export const updateLokasi = async (req, res) => {
       return res.status(400).json({ message: "Nama lokasi wajib diisi" });
     if (!id_kategori)
       return res.status(400).json({ message: "Kategori lokasi wajib dipilih" });
-    const affectedRows = await updateLokasiService(req.params.id, nama_lokasi, id_kategori);
+    
+    // Check for duplicate name (excluding current lokasi)
+    const isDuplicate = await checkDuplicateLokasiNameService(nama_lokasi, req.params.id);
+    if (isDuplicate) {
+      return res.status(400).json({ 
+        message: "Nama lokasi sudah ada. Gunakan nama yang berbeda." 
+      });
+    }
+    
+    const affectedRows = await updateLokasiService(
+      req.params.id,
+      nama_lokasi,
+      id_kategori
+    );
     if (affectedRows === 0)
       return res.status(404).json({ message: "Lokasi tidak ditemukan" });
     res.json({ message: "Lokasi berhasil diperbarui" });

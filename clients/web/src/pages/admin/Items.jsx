@@ -41,6 +41,7 @@ const AdminItems = () => {
   const { apiUrl } = useAppConfig();
   const [items, setItems] = useState([]);
   const [lokasi, setLokasi] = useState([]);
+  const [kategoriLokasi, setKategoriLokasi] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -53,6 +54,7 @@ const AdminItems = () => {
   const [current, setCurrent] = useState(null);
   const [namaItem, setNamaItem] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
+  const [idKategoriLokasi, setIdKategoriLokasi] = useState("");
   const [idLokasi, setIdLokasi] = useState(""); // string value for Select
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -79,6 +81,18 @@ const AdminItems = () => {
     }
   };
 
+  const fetchKategoriLokasi = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.get(`${apiUrl}/api/kategori-lokasi`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setKategoriLokasi(Array.isArray(data) ? data : data?.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchItems = async () => {
     try {
       setLoading(true);
@@ -98,8 +112,35 @@ const AdminItems = () => {
 
   useEffect(() => {
     fetchLokasi();
+    fetchKategoriLokasi();
     fetchItems();
   }, []); // eslint-disable-line
+
+  // Filter lokasi berdasarkan kategori yang dipilih
+  const filteredLokasi = idKategoriLokasi
+    ? lokasi.filter((l) => String(l.id_kategori) === String(idKategoriLokasi))
+    : [];
+
+  // Reset idLokasi when kategori changes
+  useEffect(() => {
+    if (mode === "create" || mode === "edit") {
+      // Keep existing lokasi when editing unless kategori is changed
+      if (mode === "create") {
+        setIdLokasi("");
+      } else if (mode === "edit" && idKategoriLokasi) {
+        // Check if current lokasi still matches the selected kategori
+        const currentLokasi = lokasi.find(
+          (l) => String(l.id_lokasi) === String(idLokasi)
+        );
+        if (
+          currentLokasi &&
+          String(currentLokasi.id_kategori) !== String(idKategoriLokasi)
+        ) {
+          setIdLokasi("");
+        }
+      }
+    }
+  }, [idKategoriLokasi]); // eslint-disable-line
 
   useEffect(() => {
     setPage(1);
@@ -110,6 +151,7 @@ const AdminItems = () => {
     setCurrent(null);
     setNamaItem("");
     setDeskripsi("");
+    setIdKategoriLokasi("");
     setIdLokasi("");
     setImageFile(null);
     setImagePreview("");
@@ -121,6 +163,11 @@ const AdminItems = () => {
     setCurrent(item);
     setNamaItem(item?.nama_item || "");
     setDeskripsi(item?.deskripsi || "");
+    // Find kategori from lokasi
+    const itemLokasi = lokasi.find((l) => l.id_lokasi === item?.id_lokasi);
+    setIdKategoriLokasi(
+      itemLokasi?.id_kategori ? String(itemLokasi.id_kategori) : ""
+    );
     setIdLokasi(item?.id_lokasi ? String(item.id_lokasi) : "");
     setImageFile(null);
     setImagePreview(item?.foto || "");
@@ -265,11 +312,8 @@ const AdminItems = () => {
       }`.toLowerCase();
       return !q || hay.includes(q);
     });
-    arr.sort((a, b) => {
-      const A = (a.nama_item || "").toLowerCase();
-      const B = (b.nama_item || "").toLowerCase();
-      return A.localeCompare(B);
-    });
+    // Sort by id_item DESC (newest first)
+    arr.sort((a, b) => (b.id_item || 0) - (a.id_item || 0));
     return arr;
   }, [items, search]);
 
@@ -510,17 +554,61 @@ const AdminItems = () => {
             </div>
             <div>
               <label className="block text-sm text-neutral-300 mb-1.5">
-                Lokasi
+                Kategori Lokasi
               </label>
-              <Select value={idLokasi || undefined} onValueChange={setIdLokasi}>
+              <Select
+                value={idKategoriLokasi || undefined}
+                onValueChange={setIdKategoriLokasi}
+              >
                 <SelectTrigger className="w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 focus-visible:border-orange-500 focus-visible:ring-0">
-                  <SelectValue placeholder="Pilih lokasi" />
+                  <SelectValue placeholder="Pilih kategori lokasi" />
                 </SelectTrigger>
                 <SelectContent
                   position="popper"
                   className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
                 >
-                  {lokasi.map((l) => (
+                  {kategoriLokasi.map((k) => (
+                    <SelectItem
+                      key={k.id_kategori}
+                      value={String(k.id_kategori)}
+                      className="text-neutral-200 focus:bg-neutral-800 focus:text-neutral-100"
+                    >
+                      {k.nama_kategori}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!idKategoriLokasi && (
+                <p className="text-xs text-neutral-500 mt-1.5">
+                  Pilih kategori terlebih dahulu untuk menampilkan lokasi
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm text-neutral-300 mb-1.5">
+                Lokasi
+              </label>
+              <Select
+                value={idLokasi || undefined}
+                onValueChange={setIdLokasi}
+                disabled={!idKategoriLokasi}
+              >
+                <SelectTrigger className="w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 focus-visible:border-orange-500 focus-visible:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <SelectValue
+                    placeholder={
+                      !idKategoriLokasi
+                        ? "Pilih kategori terlebih dahulu"
+                        : filteredLokasi.length === 0
+                        ? "Tidak ada lokasi untuk kategori ini"
+                        : "Pilih lokasi"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent
+                  position="popper"
+                  className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
+                >
+                  {filteredLokasi.map((l) => (
                     <SelectItem
                       key={l.id_lokasi}
                       value={String(l.id_lokasi)}

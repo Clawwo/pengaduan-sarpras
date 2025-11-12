@@ -13,6 +13,7 @@ import {
   getPengaduanReport as getPengaduanReportService,
 } from "../services/pengaduanService.js";
 import { createRiwayatAksi as createRiwayatAksiService } from "../services/riwayatAksiService.js";
+import { notifyAdmins, notifyUser } from "./notificationController.js";
 
 export const createPengaduan = async (req, res) => {
   try {
@@ -73,6 +74,24 @@ export const createPengaduan = async (req, res) => {
       id_lokasi,
       id_temporary: final_id_temporary,
     });
+
+    // 🔔 Kirim notifikasi ke semua admin
+    try {
+      await notifyAdmins(
+        {
+          title: "Pengaduan Baru 📋",
+          body: `${nama_pengaduan} - Menunggu ditinjau`,
+        },
+        {
+          url: "/admin/pengaduan",
+          type: "new_pengaduan",
+        }
+      );
+      console.log("✅ Notifikasi ke admin terkirim");
+    } catch (notifError) {
+      console.error("⚠️ Gagal kirim notifikasi:", notifError);
+      // Jangan blok pengaduan jika notifikasi gagal
+    }
 
     res.status(201).json({ message: "Pengaduan berhasil diajukan" });
   } catch (error) {
@@ -146,6 +165,33 @@ export const updatePengaduanStatus = async (req, res) => {
       id_petugas,
       tgl_selesai
     );
+
+    // 🔔 Kirim notifikasi ke user pemilik pengaduan
+    try {
+      const statusEmoji = {
+        Menunggu: "⏳",
+        Diproses: "🔄",
+        Selesai: "✅",
+        Ditolak: "❌",
+      };
+
+      await notifyUser(
+        oldData.id_user,
+        {
+          title: `Status Pengaduan ${statusEmoji[status] || "📋"}`,
+          body: `${oldData.nama_pengaduan} - ${status}`,
+        },
+        {
+          url: "/dashboard/riwayat",
+          type: "status_update",
+          pengaduan_id: id,
+          status: status,
+        }
+      );
+      console.log("✅ Notifikasi ke user terkirim");
+    } catch (notifError) {
+      console.error("⚠️ Gagal kirim notifikasi:", notifError);
+    }
 
     // Catat riwayat aksi petugas/admin
     try {

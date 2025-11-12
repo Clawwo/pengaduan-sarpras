@@ -220,12 +220,8 @@ const AdminLokasi = () => {
       if (!q) return true;
       return name.includes(q);
     });
-    // default sort A -> Z
-    arr.sort((a, b) => {
-      const A = (a.nama_lokasi || "").toLowerCase();
-      const B = (b.nama_lokasi || "").toLowerCase();
-      return A.localeCompare(B);
-    });
+    // Sort by id_lokasi DESC (newest first)
+    arr.sort((a, b) => (b.id_lokasi || 0) - (a.id_lokasi || 0));
     return arr;
   }, [rows, search]);
 
@@ -481,11 +477,17 @@ const AdminLokasi = () => {
               <label className="block text-sm text-neutral-300 mb-1.5">
                 Kategori Lokasi <span className="text-red-400">*</span>
               </label>
-              <Select value={idKategori || undefined} onValueChange={setIdKategori}>
+              <Select
+                value={idKategori || undefined}
+                onValueChange={setIdKategori}
+              >
                 <SelectTrigger className="w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 focus-visible:border-orange-500 focus-visible:ring-0">
                   <SelectValue placeholder="Pilih kategori" />
                 </SelectTrigger>
-                <SelectContent position="popper" className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto">
+                <SelectContent
+                  position="popper"
+                  className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
+                >
                   {kategoriList.map((k) => (
                     <SelectItem
                       key={k.id_kategori}

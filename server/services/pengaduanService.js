@@ -48,34 +48,76 @@ export const createPengaduan = async (data) => {
     id_temporary,
   } = data;
 
-  // Call stored procedure with OUT parameters
-  const [result] = await pool.query(
-    "CALL sp_create_pengaduan(?, ?, ?, ?, ?, ?, ?, ?, @new_id, @status_code, @message)",
-    [
+  try {
+    console.log("🔍 Creating pengaduan with data:", {
       nama_pengaduan,
-      deskripsi || null,
-      foto,
-      file_id,
+      deskripsi: deskripsi ? "present" : "null",
+      foto: foto ? "present" : "null",
+      file_id: file_id ? "present" : "null",
       id_user,
       id_item,
       id_lokasi,
-      id_temporary || null,
-    ]
-  );
+      id_temporary,
+    });
 
-  // Get OUT parameters
-  const [outParams] = await pool.query(
-    "SELECT @new_id as newId, @status_code as statusCode, @message as message"
-  );
+    // First, let's check if we can get MySQL warnings/errors
+    try {
+      // Call stored procedure with OUT parameters
+      const [result] = await pool.query(
+        "CALL sp_create_pengaduan(?, ?, ?, ?, ?, ?, ?, ?, @new_id, @status_code, @message)",
+        [
+          nama_pengaduan,
+          deskripsi || null,
+          foto,
+          file_id,
+          id_user,
+          id_item,
+          id_lokasi,
+          id_temporary || null,
+        ]
+      );
 
-  const { newId, statusCode, message } = outParams[0];
+      console.log("✅ Stored procedure executed, result:", result);
 
-  // Handle errors based on status code
-  if (statusCode === 500) {
-    throw new Error(message || "Database error occurred");
+      // Check for MySQL warnings
+      const [warnings] = await pool.query("SHOW WARNINGS");
+      if (warnings.length > 0) {
+        console.log("⚠️ MySQL Warnings:", warnings);
+      }
+
+      // Get OUT parameters
+      const [outParams] = await pool.query(
+        "SELECT @new_id as newId, @status_code as statusCode, @message as message"
+      );
+
+      console.log("📊 OUT parameters:", outParams[0]);
+
+      const { newId, statusCode, message } = outParams[0];
+
+      // Handle errors based on status code
+      if (statusCode === 500) {
+        console.error("❌ Database error from SP:", message);
+        throw new Error(message || "Database error occurred");
+      }
+
+      console.log("✅ Pengaduan created successfully with ID:", newId);
+      return newId;
+    } catch (spError) {
+      // Log the actual MySQL error
+      console.error("❌ MySQL Error Details:", {
+        code: spError.code,
+        errno: spError.errno,
+        sqlState: spError.sqlState,
+        sqlMessage: spError.sqlMessage,
+        sql: spError.sql,
+        message: spError.message,
+      });
+      throw spError;
+    }
+  } catch (error) {
+    console.error("❌ Error in createPengaduan service:", error);
+    throw error;
   }
-
-  return newId;
 };
 
 export const getAllPengaduan = async () => {

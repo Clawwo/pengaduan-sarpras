@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 // Admin imports
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -19,44 +20,58 @@ import AdminPetugas from "./pages/admin/Petugas";
 import AdminItems from "./pages/admin/Items";
 import AdminLokasi from "./pages/admin/Lokasi";
 import AdminTemporaryItems from "./pages/admin/TemporaryItems";
+import AdminUsers from "./pages/admin/Users";
+
+// Load FCM Diagnostic Tool
+import { runFCMDiagnostic } from "./utils/fcmDiagnostic";
+
+// Make diagnostic available in console
+if (typeof window !== "undefined") {
+  window.runFCMDiagnostic = runFCMDiagnostic;
+  console.log("💡 Tip: Run 'runFCMDiagnostic()' in console to check FCM setup");
+}
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        {/* User Dashboard (pengguna) */}
-        <Route element={<ProtectedRoute roles={["pengguna"]} />}>
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Home />} />
-            <Route path="riwayat" element={<Riwayat />} />
-            <Route path="tambah" element={<Tambah />} />
+    <>
+      <Toaster position="top-right" />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          {/* User Dashboard (pengguna) */}
+          <Route element={<ProtectedRoute roles={["pengguna"]} />}>
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Home />} />
+              <Route path="riwayat" element={<Riwayat />} />
+              <Route path="tambah" element={<Tambah />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* Petugas Dashboard */}
-        <Route element={<ProtectedRoute roles={["petugas"]} />}>
-          <Route path="/petugas" element={<PetugasLayout />}>
-            <Route index element={<PetugasDashboard />} />
-            <Route path="pengaduan" element={<PetugasPengaduan />} />
+          {/* Petugas Dashboard */}
+          <Route element={<ProtectedRoute roles={["petugas"]} />}>
+            <Route path="/petugas" element={<PetugasLayout />}>
+              <Route index element={<PetugasDashboard />} />
+              <Route path="pengaduan" element={<PetugasPengaduan />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* Admin Dashboard */}
-        <Route element={<ProtectedRoute roles={["admin"]} />}>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="pengaduan" element={<AdminPengaduan />} />
-            <Route path="riwayat-aksi" element={<AdminRiwayatAksi />} />
-            <Route path="petugas" element={<AdminPetugas />} />
-            <Route path="items" element={<AdminItems />} />
-            <Route path="lokasi" element={<AdminLokasi />} />
-            <Route path="temporary-items" element={<AdminTemporaryItems />} />
+          {/* Admin Dashboard */}
+          <Route element={<ProtectedRoute roles={["admin"]} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="pengaduan" element={<AdminPengaduan />} />
+              <Route path="riwayat-aksi" element={<AdminRiwayatAksi />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="petugas" element={<AdminPetugas />} />
+              <Route path="items" element={<AdminItems />} />
+              <Route path="lokasi" element={<AdminLokasi />} />
+              <Route path="temporary-items" element={<AdminTemporaryItems />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+    </>
   );
 }
 

@@ -21,6 +21,19 @@ export const getLokasiById = async (id) => {
   return rows[0];
 };
 
+export const checkDuplicateLokasiName = async (nama_lokasi, excludeId = null) => {
+  let query = "SELECT id_lokasi FROM pengaduan_sarpras_lokasi WHERE LOWER(TRIM(nama_lokasi)) = LOWER(TRIM(?))";
+  const params = [nama_lokasi];
+  
+  if (excludeId) {
+    query += " AND id_lokasi != ?";
+    params.push(excludeId);
+  }
+  
+  const [rows] = await pool.query(query, params);
+  return rows.length > 0;
+};
+
 export const createLokasi = async (nama_lokasi, id_kategori) => {
   const [result] = await pool.query(
     "INSERT INTO pengaduan_sarpras_lokasi (nama_lokasi, id_kategori) VALUES (?, ?)",

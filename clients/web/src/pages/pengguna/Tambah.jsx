@@ -531,12 +531,16 @@ const Tambah = () => {
             <div className="bg-neutral-800/40 rounded-md p-3 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-neutral-400">Nama Pengaduan:</span>
-                <span className="text-neutral-100 font-medium">{nama_pengaduan}</span>
+                <span className="text-neutral-100 font-medium">
+                  {nama_pengaduan}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-400">Lokasi:</span>
                 <span className="text-neutral-100">
-                  {filteredLokasi.find((l) => String(l.id_lokasi) === String(id_lokasi))?.nama_lokasi || "-"}
+                  {filteredLokasi.find(
+                    (l) => String(l.id_lokasi) === String(id_lokasi)
+                  )?.nama_lokasi || "-"}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -544,23 +548,32 @@ const Tambah = () => {
                 <span className="text-neutral-100">
                   {showCustomItem ? (
                     <span>
-                      {customItem} <span className="text-amber-400 text-xs italic">(item baru)</span>
+                      {customItem}{" "}
+                      <span className="text-amber-400 text-xs italic">
+                        (item baru)
+                      </span>
                     </span>
                   ) : (
-                    filteredItems.find((i) => String(i.id_item) === String(id_item))?.nama_item || "-"
+                    filteredItems.find(
+                      (i) => String(i.id_item) === String(id_item)
+                    )?.nama_item || "-"
                   )}
                 </span>
               </div>
               {deskripsi && (
                 <div className="pt-2 border-t border-neutral-700">
-                  <span className="text-neutral-400 block mb-1">Deskripsi:</span>
+                  <span className="text-neutral-400 block mb-1">
+                    Deskripsi:
+                  </span>
                   <span className="text-neutral-100 text-xs">{deskripsi}</span>
                 </div>
               )}
               {foto && (
                 <div className="pt-2 border-t border-neutral-700">
                   <span className="text-neutral-400 block mb-1">Foto:</span>
-                  <span className="text-green-400 text-xs">✓ Foto terlampir</span>
+                  <span className="text-green-400 text-xs">
+                    ✓ Foto terlampir
+                  </span>
                 </div>
               )}
             </div>
@@ -568,7 +581,8 @@ const Tambah = () => {
             {showCustomItem && (
               <div className="bg-amber-900/20 border border-amber-700/30 rounded-md p-3">
                 <p className="text-xs text-amber-300">
-                  <strong>Catatan:</strong> Item baru yang Anda ajukan akan diverifikasi oleh petugas terlebih dahulu.
+                  <strong>Catatan:</strong> Item baru yang Anda ajukan akan
+                  diverifikasi oleh petugas terlebih dahulu.
                 </p>
               </div>
             )}

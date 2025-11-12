@@ -11,6 +11,7 @@ import kategoriLokasiRoutes from "./routes/kategoriLokasiRoute.js";
 import temporaryItemRoutes from "./routes/temporaryItemRoute.js";
 import pengaduanRoutes from "./routes/pengaduanRoute.js";
 import riwayatAksiRoutes from "./routes/riwayatAksiRoute.js";
+import notificationRoutes from "./routes/notificationRoute.js";
 
 dotenv.config();
 const app = express();
@@ -58,6 +59,7 @@ app.use("/api/items", itemRoutes);
 app.use("/api/temporary-item", temporaryItemRoutes);
 app.use("/api/pengaduan", pengaduanRoutes);
 app.use("/api/riwayat-aksi", riwayatAksiRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || "0.0.0.0"; // Bind to all interfaces for mobile access

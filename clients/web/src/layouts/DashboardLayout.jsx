@@ -18,6 +18,7 @@ import {
 import { useAppConfig } from "../lib/useAppConfig";
 import { updateMyProfile } from "../lib/utils/user";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import NotificationDropdown from "../components/NotificationDropdown";
 import {
   Sheet,
   SheetContent,
@@ -292,6 +293,11 @@ const DashboardLayout = () => {
                 )}
               </BreadcrumbList>
             </Breadcrumb>
+
+            {/* Notification Bell */}
+            <div className="ml-auto">
+              <NotificationDropdown />
+            </div>
           </div>
           <div className="p-4 lg:p-6">
             <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">

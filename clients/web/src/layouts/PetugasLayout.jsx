@@ -17,6 +17,7 @@ import {
 import { useAppConfig } from "../lib/useAppConfig";
 import { updateMyProfile } from "../lib/utils/user";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import NotificationDropdown from "../components/NotificationDropdown";
 import {
   Sheet,
   SheetContent,
@@ -270,6 +271,11 @@ const PetugasLayout = () => {
                 )}
               </BreadcrumbList>
             </Breadcrumb>
+
+            {/* Notification Bell */}
+            <div className="ml-auto">
+              <NotificationDropdown />
+            </div>
           </div>
           {alert && (
             <Alert

@@ -18,10 +18,13 @@ import {
   LogOut,
   Menu,
   History,
+  Users,
 } from "lucide-react";
 import { useAppConfig } from "../lib/useAppConfig";
 import { updateMyProfile } from "../lib/utils/user";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import NotificationBanner from "../components/NotificationBanner";
+import NotificationDropdown from "../components/NotificationDropdown";
 import {
   Sheet,
   SheetContent,
@@ -148,6 +151,9 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      {/* Notification Permission Banner */}
+      <NotificationBanner />
+
       {/* Alert Notification */}
       {alert && (
         <Alert
@@ -189,6 +195,22 @@ const AdminLayout = () => {
               <NavLink to="/admin/riwayat-aksi" className={linkClass}>
                 <History className="size-4 text-neutral-400" />
                 <span>Riwayat Aksi</span>
+              </NavLink>
+
+              {/* Section Divider with visual distinction */}
+              <div className="pt-4 pb-2">
+                <div className="flex items-center gap-2 px-2">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-700 to-transparent"></div>
+                  <span className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+                    Manajemen
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-700 to-transparent"></div>
+                </div>
+              </div>
+
+              <NavLink to="/admin/users" className={linkClass}>
+                <Users className="size-4 text-neutral-400" />
+                <span>Kelola Users</span>
               </NavLink>
               <NavLink to="/admin/petugas" className={linkClass}>
                 <Users2 className="size-4 text-neutral-400" />
@@ -304,6 +326,9 @@ const AdminLayout = () => {
                       {location.pathname.startsWith("/admin/riwayat-aksi") && (
                         <BreadcrumbPage>Riwayat Aksi</BreadcrumbPage>
                       )}
+                      {location.pathname.startsWith("/admin/users") && (
+                        <BreadcrumbPage>Kelola Users</BreadcrumbPage>
+                      )}
                       {location.pathname.startsWith("/admin/petugas") && (
                         <BreadcrumbPage>Petugas</BreadcrumbPage>
                       )}
@@ -321,6 +346,11 @@ const AdminLayout = () => {
                 )}
               </BreadcrumbList>
             </Breadcrumb>
+
+            {/* Notification Bell */}
+            <div className="ml-auto">
+              <NotificationDropdown />
+            </div>
           </div>
           <div className="p-4 lg:p-6">
             <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
@@ -373,6 +403,26 @@ const AdminLayout = () => {
             >
               <History className="size-4 text-neutral-400" />
               <span>Riwayat Aksi</span>
+            </NavLink>
+
+            {/* Section Divider */}
+            <div className="pt-4 pb-2">
+              <div className="flex items-center gap-2 px-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-700 to-transparent"></div>
+                <span className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+                  Manajemen
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-neutral-700 to-transparent"></div>
+              </div>
+            </div>
+
+            <NavLink
+              to="/admin/users"
+              className={linkClass}
+              onClick={() => setNavOpen(false)}
+            >
+              <Users className="size-4 text-orange-400" />
+              <span>Kelola Users</span>
             </NavLink>
             <NavLink
               to="/admin/petugas"

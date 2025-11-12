@@ -54,7 +54,7 @@ const AdminPetugas = () => {
       const { data } = await axios.get(`${apiUrl}/api/petugas`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setRows(Array.isArray(data) ? data : data?.data || []);
+      setRows(data.data.items);
     } catch (err) {
       setError(
         err?.response?.data?.message || err.message || "Gagal memuat petugas"
@@ -227,7 +227,7 @@ const AdminPetugas = () => {
       )}
 
       <div className="flex items-center gap-2 mb-2">
-        <div className="size-7 rounded-md border border-neutral-700 bg-neutral-800/80 text-neutral-300 flex items-center justify-center">
+        <div className="flex items-center justify-center border rounded-md size-7 border-neutral-700 bg-neutral-800/80 text-neutral-300">
           <Users className="size-4" />
         </div>
         <div>
@@ -238,10 +238,10 @@ const AdminPetugas = () => {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 w-full sm:max-w-lg">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div className="flex items-center w-full gap-2 sm:max-w-lg">
           <div className="relative flex-1">
-            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-neutral-500">
+            <div className="absolute inset-y-0 flex items-center pointer-events-none left-3 text-neutral-500">
               <Search className="size-4" />
             </div>
             <input
@@ -249,26 +249,26 @@ const AdminPetugas = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari username, nama, telp..."
-              className="w-full rounded-md border border-neutral-800 bg-neutral-900/60 pl-9 pr-3 py-2 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:ring-0 focus:border-neutral-700"
+              className="w-full py-2 pr-3 text-sm border rounded-md outline-none border-neutral-800 bg-neutral-900/60 pl-9 text-neutral-200 placeholder:text-neutral-500 focus:ring-0 focus:border-neutral-700"
             />
           </div>
           <div className="relative" ref={filterRef}>
             <button
               type="button"
               onClick={() => setFilterOpen(!filterOpen)}
-              className="inline-flex items-center gap-2 rounded-md border border-neutral-800 bg-neutral-900/60 text-neutral-300 px-3 py-2 text-sm hover:bg-neutral-800 whitespace-nowrap"
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm border rounded-md border-neutral-800 bg-neutral-900/60 text-neutral-300 hover:bg-neutral-800 whitespace-nowrap"
             >
               <Filter className="size-4" />
               Filter
             </button>
             {filterOpen && (
-              <div className="absolute left-0 top-full mt-2 z-20 w-56 rounded-md border border-neutral-800 bg-neutral-900 shadow-lg">
+              <div className="absolute left-0 z-20 w-56 mt-2 border rounded-md shadow-lg top-full border-neutral-800 bg-neutral-900">
                 <div className="p-3 space-y-3">
-                  <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wide">
+                  <div className="text-xs font-semibold tracking-wide uppercase text-neutral-400">
                     Gender
                   </div>
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer text-neutral-300">
                       <Checkbox
                         checked={filterGender.l}
                         onCheckedChange={(checked) =>
@@ -277,7 +277,7 @@ const AdminPetugas = () => {
                       />
                       <span>Laki-laki</span>
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer text-neutral-300">
                       <Checkbox
                         checked={filterGender.p}
                         onCheckedChange={(checked) =>
@@ -295,14 +295,14 @@ const AdminPetugas = () => {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-md border border-neutral-800 bg-neutral-900/60 text-neutral-300 px-3 py-2 text-sm hover:bg-neutral-800"
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm border rounded-md border-neutral-800 bg-neutral-900/60 text-neutral-300 hover:bg-neutral-800"
           >
             Total: {filtered.length}
           </button>
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex items-center gap-2 rounded-md bg-orange-500 text-white px-3 py-2 text-sm hover:bg-orange-600"
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-white bg-orange-500 rounded-md hover:bg-orange-600"
           >
             <Plus className="size-4" />
             Tambah Petugas
@@ -339,7 +339,7 @@ const AdminPetugas = () => {
                 {/* Edit profile deferred due to missing route on server */}
                 {/* <button className="px-2 py-1 text-xs rounded-md border border-neutral-700 hover:bg-neutral-800 mr-1.5" onClick={() => openEdit(r)}>Kelola</button> */}
                 <button
-                  className="px-2 py-1 text-xs rounded-md border border-red-900/60 text-red-300 hover:bg-red-950/30"
+                  className="px-2 py-1 text-xs text-red-300 border rounded-md border-red-900/60 hover:bg-red-950/30"
                   onClick={() => {
                     setDeleteTarget(r);
                     setDeleteOpen(true);
@@ -352,7 +352,7 @@ const AdminPetugas = () => {
           ))}
           {filtered.length === 0 && (
             <TableRow>
-              <TableCell className="text-neutral-500 text-center" colSpan={7}>
+              <TableCell className="text-center text-neutral-500" colSpan={7}>
                 Tidak ada petugas.
               </TableCell>
             </TableRow>
@@ -396,7 +396,7 @@ const AdminPetugas = () => {
             </DialogTitle>
             <DialogDescription className="text-neutral-400">
               Apakah Anda yakin ingin menghapus petugas{" "}
-              <span className="text-neutral-200 font-medium">
+              <span className="font-medium text-neutral-200">
                 "{deleteTarget?.nama}" (username: {deleteTarget?.username})
               </span>
               ? Tindakan ini tidak dapat dibatalkan.
@@ -432,12 +432,12 @@ const AdminPetugas = () => {
             <DialogTitle className="text-neutral-100">
               Tambah Petugas
             </DialogTitle>
-            <DialogDescription className="text-neutral-400 text-sm">
+            <DialogDescription className="text-sm text-neutral-400">
               Buat akun baru untuk petugas lapangan.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submitCreate} className="space-y-4 text-[13.5px]">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-sm text-neutral-300 mb-1.5">
                   Username *
@@ -460,7 +460,7 @@ const AdminPetugas = () => {
                   className="w-full rounded-md bg-neutral-900/60 border border-neutral-800 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-0 focus:border-neutral-700 px-3 py-2.5"
                   placeholder="••••••••"
                 />
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="mt-1 text-xs text-neutral-500">
                   Minimal 6 karakter
                 </p>
               </div>
@@ -495,11 +495,11 @@ const AdminPetugas = () => {
                   onValueChange={setGender}
                   className="flex items-center gap-4"
                 >
-                  <label className="inline-flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                  <label className="inline-flex items-center gap-2 text-sm cursor-pointer text-neutral-300">
                     <RadioGroupItem value="l" />
                     <span>Laki-laki</span>
                   </label>
-                  <label className="inline-flex items-center gap-2 text-sm text-neutral-300 cursor-pointer">
+                  <label className="inline-flex items-center gap-2 text-sm cursor-pointer text-neutral-300">
                     <RadioGroupItem value="p" />
                     <span>Perempuan</span>
                   </label>
