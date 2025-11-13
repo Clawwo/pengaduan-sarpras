@@ -25,8 +25,9 @@ app.use(
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/, // Any local network IP
       /^http:\/\/localhost:\d+$/, // Any localhost port
       "exp://",
-      "farelhry.my.id", 
-      "ukk.farelhry.my.id",      
+      "https://farelhry.my.id",
+      "https://ukk.farelhry.my.id",
+      "http://localhost:3000",
     ],
     credentials: true,
   })
