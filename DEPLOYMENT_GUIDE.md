@@ -1,10 +1,6 @@
 # 🚀 VPS Deployment Guide - Ubuntu Server# 🚀 Deployment Guide - Sistem Pengaduan Sarana Prasarana
 
-
-
 Complete guide untuk deploy aplikasi Pengaduan Sarpras ke VPS Ubuntu.## 📋 Daftar Isi
-
-
 
 ## 📋 Prerequisites1. [Spesifikasi Server](#spesifikasi-server)
 
@@ -22,23 +18,17 @@ Complete guide untuk deploy aplikasi Pengaduan Sarpras ke VPS Ubuntu.## 📋 Daf
 
 - **Network:** Public IP address8. [Troubleshooting](#troubleshooting)
 
-
-
 ### Domain Requirements:---
 
 - Domain name (e.g., pengaduan-sarpras.my.id)
 
 - DNS pointed to VPS IP address## 🖥️ Spesifikasi Server
 
-
-
 ### Local Requirements:### Biznet Gio NEO Lite - SS.2
 
 - SSH access to VPS
 
 - Git installed**Spesifikasi:**
-
-
 
 ---- **CPU:** 1 vCPU
 
@@ -60,7 +50,7 @@ ssh your-username@your-vps-ip**Analisis Kebutuhan Project:**
 
 ```
 
-```
+````
 
 ### 2️⃣ Upload and Run Setup ScriptBackend (Node.js):        ~150-200 MB RAM
 
@@ -192,11 +182,11 @@ sudo ufw enable
 
 ### Step 1: Initial VPS Setupsudo ufw status verbose
 
-```
+````
 
 #### 1.1 Connect to VPS
 
-```bash---
+````bash---
 
 ssh root@your-vps-ip
 
@@ -214,7 +204,7 @@ usermod -aG sudo deployer# Remove old versions jika ada
 
 su - deployersudo apt remove docker docker-engine docker.io containerd runc
 
-```
+````
 
 # Install prerequisites
 
@@ -222,7 +212,7 @@ su - deployersudo apt remove docker docker-engine docker.io containerd runc
 
 From your local machine:sudo apt install -y \
 
-```bash    ca-certificates \
+````bash ca-certificates \
 
 scp setup-vps.sh deployer@your-vps-ip:/home/deployer/    curl \
 
@@ -238,15 +228,15 @@ chmod +x setup-vps.shsudo mkdir -m 0755 -p /etc/apt/keyrings
 
 sudo ./setup-vps.shcurl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-```
+````
 
 # Setup repository
 
 Follow prompts:echo \
 
-- Enter GitHub repository URL  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+- Enter GitHub repository URL "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
 
-- Enter MySQL database credentials  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+- Enter MySQL database credentials $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 - Confirm installations
 
@@ -262,7 +252,7 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin d
 
 #### 2.1 Secure MySQLdocker --version
 
-```bash# Output: Docker version 24.x.x, build xxx
+````bash# Output: Docker version 24.x.x, build xxx
 
 sudo mysql_secure_installation
 
@@ -304,13 +294,13 @@ SHOW TABLES;sudo chmod +x /usr/local/bin/docker-compose
 
 EXIT;```
 
-```
+````
 
 ---
 
 #### 2.3 Import Schema (if not auto-imported)
 
-```bash## 📁 Struktur Project di Server
+````bash## 📁 Struktur Project di Server
 
 cd /var/www/pengaduan-sarpras
 
@@ -388,13 +378,13 @@ IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_idBuat file `docker-compose.ym
 
 FRONTEND_URL=https://your-domain.comversion: "3.8"
 
-```
+````
 
 services:
 
-#### 3.2 Install Backend Dependencies  # MySQL Database
+#### 3.2 Install Backend Dependencies # MySQL Database
 
-```bash  mysql:
+````bash mysql:
 
 cd /var/www/pengaduan-sarpras/server    image: mysql:8.2.0
 
@@ -640,13 +630,11 @@ Follow prompts:  frontend_dist:
 
 sudo certbot renew --dry-run    driver: bridge
 
-``````
-
-
+````
 
 #### 7.4 Verify HTTPS### 2. Backend Dockerfile (`server/Dockerfile`)
 
-```bash
+````bash
 
 # Check certificate```dockerfile
 
@@ -720,13 +708,13 @@ cd /var/www/pengaduan-sarpras# Switch to non-root user
 
 ./deploy.shUSER nodejs
 
-```
+````
 
 # Expose port
 
 #### Option 2: Manual DeploymentEXPOSE 5000
 
-```bash
+````bash
 
 # 1. Pull latest code# Health check
 
@@ -820,7 +808,7 @@ pm2 restart pengaduan-backend# Start nginx
 
 ```CMD ["nginx", "-g", "daemon off;"]
 
-```
+````
 
 ---
 
@@ -828,7 +816,7 @@ pm2 restart pengaduan-backend# Start nginx
 
 ### Issue 2: Frontend Shows 404
 
-```dockerfile
+````dockerfile
 
 **Check files:**FROM nginx:1.25-alpine
 
@@ -896,11 +884,11 @@ pm2 restart pengaduan-backend    worker_connections 1024;
 
 sudo systemctl reload nginx}
 
-```
+````
 
 http {
 
----    include /etc/nginx/mime.types;
+--- include /etc/nginx/mime.types;
 
     default_type application/octet-stream;
 
@@ -908,9 +896,9 @@ http {
 
     # Logging
 
-**Test connection:**    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+**Test connection:** log_format main '$remote_addr - $remote_user [$time_local] "$request" '
 
-```bash                    '$status $body_bytes_sent "$http_referer" '
+```bash '$status $body_bytes_sent "$http_referer" '
 
 mysql -u pengaduan_user -p pengaduan_sarpras                    '"$http_user_agent" "$http_x_forwarded_for"';
 
@@ -920,7 +908,7 @@ mysql -u pengaduan_user -p pengaduan_sarpras                    '"$http_user_age
 
 **Check credentials in .env:**
 
-```bash    # Performance
+````bash # Performance
 
 cat /var/www/pengaduan-sarpras/server/.env | grep DB_    sendfile on;
 
@@ -1036,11 +1024,11 @@ df -h
 
 free -m            limit_req zone=api_limit burst=20 nodelay;
 
-```
+````
 
             proxy_pass http://backend;
 
-### Backup Database            proxy_http_version 1.1;
+### Backup Database proxy_http_version 1.1;
 
 ```bash
 
@@ -1058,17 +1046,15 @@ mysql -u pengaduan_user -p pengaduan_sarpras < backup-20250113.sql            pr
 
             # Timeouts
 
----            proxy_connect_timeout 60s;
+--- proxy_connect_timeout 60s;
 
             proxy_send_timeout 60s;
 
-## 🛠️ Useful Commands            proxy_read_timeout 60s;
+## 🛠️ Useful Commands proxy_read_timeout 60s;
 
+### PM2 Commands # Buffering
 
-
-### PM2 Commands            # Buffering
-
-```bash            proxy_buffering on;
+````bash proxy_buffering on;
 
 pm2 status                      # Check status            proxy_buffer_size 4k;
 
@@ -1176,7 +1162,7 @@ Your application should now be live at:    #     # Same locations as HTTP server
 
 - **Health Check:** https://your-domain.com/api/health}
 
-```
+````
 
 ---
 

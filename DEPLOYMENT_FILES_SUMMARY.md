@@ -3,14 +3,18 @@
 ## ✅ Files Created
 
 ### 1. **ecosystem.config.js** - PM2 Configuration
+
 Process manager untuk menjalankan Node.js backend:
+
 - Auto-restart on crash
 - Cluster mode support
 - Log management
 - Memory limit (500MB)
 
 ### 2. **nginx.conf** - Nginx Reverse Proxy
+
 Konfigurasi web server:
+
 - Serve React static files
 - Proxy `/api` ke backend
 - Socket.io WebSocket support
@@ -19,18 +23,24 @@ Konfigurasi web server:
 - Cache control untuk static assets
 
 ### 3. **.env.production** - Backend Environment Template
+
 Template environment variables:
+
 - Database credentials
 - JWT secret
 - ImageKit API keys
 - Port configuration
 
 ### 4. **clients/web/.env.production** - Frontend Environment
+
 Frontend build-time variables:
+
 - API URL configuration
 
 ### 5. **setup-vps.sh** - VPS Initial Setup Script (CRITICAL)
+
 One-time setup script untuk VPS baru:
+
 - Install Node.js 20
 - Install PM2
 - Install Nginx
@@ -42,7 +52,9 @@ One-time setup script untuk VPS baru:
 - Import schema
 
 ### 6. **deploy.sh** - Deployment Script
+
 Deploy updates ke production:
+
 - Pull latest code
 - Install dependencies
 - Build frontend
@@ -51,7 +63,9 @@ Deploy updates ke production:
 - Reload Nginx
 
 ### 7. **DEPLOYMENT_GUIDE.md** - Complete Deployment Guide (30+ pages)
+
 Dokumentasi lengkap step-by-step:
+
 - Prerequisites
 - Initial VPS setup
 - Database configuration
@@ -63,20 +77,26 @@ Dokumentasi lengkap step-by-step:
 - Monitoring tips
 
 ### 8. **QUICK_DEPLOY.md** - Quick Reference
+
 Quick start guide untuk deployment:
+
 - 5-step deployment
 - Essential commands
 - Common troubleshooting
 
 ### 9. **DEPLOYMENT_CHECKLIST.md** - Deployment Checklist
+
 Printable checklist:
+
 - 8 deployment phases
 - Time estimates per phase
 - Testing procedures
 - Credentials tracking
 
 ### 10. **README.md** - Updated Project Documentation
+
 Comprehensive project documentation:
+
 - Features overview
 - Tech stack
 - Project structure
@@ -86,7 +106,9 @@ Comprehensive project documentation:
 - Troubleshooting
 
 ### 11. **server/package.json** - Updated Scripts
+
 Added production scripts:
+
 - `npm start` - Production mode
 - `npm run dev` - Development mode
 
@@ -95,11 +117,13 @@ Added production scripts:
 ## 🚀 Quick Start untuk Deploy ke VPS
 
 ### Step 1: Connect to VPS
+
 ```bash
 ssh your-user@your-vps-ip
 ```
 
 ### Step 2: Clone & Setup
+
 ```bash
 cd /var/www
 sudo git clone https://github.com/Clawwo/pengaduan-sarpras.git
@@ -111,6 +135,7 @@ sudo ./setup-vps.sh
 ```
 
 ### Step 3: Configure
+
 ```bash
 # Backend
 cp .env.production server/.env
@@ -124,12 +149,14 @@ sudo systemctl restart nginx
 ```
 
 ### Step 4: Deploy
+
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
 
 ### Step 5: SSL (Optional)
+
 ```bash
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d your-domain.com
@@ -142,6 +169,7 @@ sudo certbot --nginx -d your-domain.com
 ## 📋 What Each File Does
 
 ### **ecosystem.config.js**
+
 ```javascript
 // PM2 runs your Node.js app as a service
 // Auto-restart if crash, cluster mode for scaling
@@ -149,6 +177,7 @@ pm2 start ecosystem.config.js --env production
 ```
 
 ### **nginx.conf**
+
 ```nginx
 # Nginx acts as reverse proxy:
 # - Serves React static files at /
@@ -157,6 +186,7 @@ pm2 start ecosystem.config.js --env production
 ```
 
 ### **setup-vps.sh**
+
 ```bash
 # One-time setup - installs everything needed:
 # Node.js, PM2, Nginx, MySQL, Firewall
@@ -164,6 +194,7 @@ pm2 start ecosystem.config.js --env production
 ```
 
 ### **deploy.sh**
+
 ```bash
 # Deploy new version:
 # Pull code → Install deps → Build frontend → Restart backend
@@ -198,6 +229,7 @@ Nginx (Port 80/443)
 ## 🎯 Deployment Workflow
 
 ### First Time Deployment:
+
 1. `setup-vps.sh` - Setup VPS (once)
 2. Configure `.env` files
 3. Setup Nginx config
@@ -205,6 +237,7 @@ Nginx (Port 80/443)
 5. Setup SSL with Certbot
 
 ### Future Updates:
+
 1. Commit code changes
 2. Push to GitHub
 3. On VPS: `cd /var/www/pengaduan-sarpras && git pull && ./deploy.sh`
@@ -227,17 +260,20 @@ Nginx (Port 80/443)
 ## ✅ Next Steps
 
 1. **Test Locally** (Optional)
+
    ```bash
    cd server && npm install && npm run dev
    cd clients/web && npm install && npm run dev
    ```
 
 2. **Prepare VPS**
+
    - Get VPS (Biznet Gio, DigitalOcean, Vultr, etc.)
    - Get domain name (optional but recommended)
    - Point DNS to VPS IP
 
 3. **Deploy**
+
    - Follow QUICK_DEPLOY.md or DEPLOYMENT_GUIDE.md
    - Run setup-vps.sh
    - Configure and deploy
@@ -254,10 +290,12 @@ Nginx (Port 80/443)
 ## 🆘 If Issues Occur
 
 1. **Check documentation:**
+
    - DEPLOYMENT_GUIDE.md (detailed)
    - QUICK_DEPLOY.md (quick fix)
 
 2. **Check logs:**
+
    ```bash
    pm2 logs pengaduan-backend
    sudo tail -f /var/log/nginx/pengaduan-error.log
@@ -274,6 +312,7 @@ Nginx (Port 80/443)
 ## 🎉 Summary
 
 **You now have:**
+
 - ✅ Complete VPS deployment configuration
 - ✅ Automated setup script (setup-vps.sh)
 - ✅ Automated deploy script (deploy.sh)
