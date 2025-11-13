@@ -61,7 +61,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # Frontend Web (React + Vite)
+  # Frontend Web (React + Vite) - Build only
   frontend:
     build:
       context: ./clients/web
@@ -69,13 +69,14 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL}
     container_name: pengaduan-frontend
-    restart: always
+    restart: "no"
     depends_on:
       - backend
     volumes:
-      - frontend_dist:/app/dist
+      - frontend_dist:/tmp/dist
     networks:
       - pengaduan-network
+    command: sh -c "cp -r /usr/share/nginx/html/* /tmp/dist/ && echo 'Frontend files copied' && exit 0"
 
   # Nginx Reverse Proxy
   nginx:
@@ -85,8 +86,10 @@ services:
     container_name: pengaduan-nginx
     restart: always
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_completed_successfully
     ports:
       - "80:80"
       - "443:443"

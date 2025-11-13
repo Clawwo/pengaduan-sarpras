@@ -21,6 +21,7 @@
 ```
 
 **Keuntungan:**
+
 - ✅ Backend dan Frontend terpisah (lebih profesional)
 - ✅ Mudah scale independently
 - ✅ CORS configuration lebih mudah
@@ -38,12 +39,12 @@ Login ke Cloudflare Dashboard → DNS → Records
 
 **Tambahkan 4 DNS records:**
 
-| Type | Name | Content | Proxy | TTL |
-|------|------|---------|-------|-----|
-| A | api | [IP-SERVER] | ☁️ Proxied | Auto |
-| A | ukk | [IP-SERVER] | ☁️ Proxied | Auto |
-| A | @ | [IP-SERVER] | ☁️ Proxied | Auto |
-| A | www | [IP-SERVER] | ☁️ Proxied | Auto |
+| Type | Name | Content     | Proxy      | TTL  |
+| ---- | ---- | ----------- | ---------- | ---- |
+| A    | api  | [IP-SERVER] | ☁️ Proxied | Auto |
+| A    | ukk  | [IP-SERVER] | ☁️ Proxied | Auto |
+| A    | @    | [IP-SERVER] | ☁️ Proxied | Auto |
+| A    | www  | [IP-SERVER] | ☁️ Proxied | Auto |
 
 **Contoh:**
 Jika domain: `pengaduan-sarpras.my.id` dan IP: `103.123.45.67`
@@ -66,6 +67,7 @@ Nginx config sudah diupdate dengan subdomain configuration!
 **Konfigurasi yang sudah ditambahkan:**
 
 1. **API Subdomain** (`api.domainmu.com`):
+
    - Port 80 (HTTP) & 443 (HTTPS)
    - Proxy semua request ke backend:5000
    - Rate limiting untuk API
@@ -73,6 +75,7 @@ Nginx config sudah diupdate dengan subdomain configuration!
    - Socket.io support
 
 2. **Frontend Subdomain** (`ukk.domainmu.com`):
+
    - Port 80 (HTTP) & 443 (HTTPS)
    - Serve static files (React build)
    - Cache control untuk assets
@@ -90,6 +93,7 @@ nano nginx/nginx.conf
 ```
 
 **Ganti placeholder domain:**
+
 ```nginx
 # Line ~46: API subdomain
 server_name api.domainmu.com;
@@ -127,6 +131,7 @@ nano .env
 ```
 
 **Update VITE_API_URL:**
+
 ```bash
 # Before:
 VITE_API_URL=http://your-server-ip
@@ -176,6 +181,7 @@ docker compose ps
 ### Step 6: Test Subdomain Configuration
 
 #### Test DNS Resolution:
+
 ```bash
 # Test API subdomain
 nslookup api.pengaduan-sarpras.my.id
@@ -187,6 +193,7 @@ nslookup ukk.pengaduan-sarpras.my.id
 ```
 
 #### Test HTTP Endpoints:
+
 ```bash
 # Test API subdomain
 curl -I http://api.pengaduan-sarpras.my.id/health
@@ -208,15 +215,17 @@ curl http://ukk.pengaduan-sarpras.my.id/
 #### Test via Browser:
 
 1. **API Subdomain:**
+
    ```
    http://api.pengaduan-sarpras.my.id/health
    → Should show: "API OK"
-   
+
    http://api.pengaduan-sarpras.my.id/api/lokasi
    → Should show: JSON data lokasi
    ```
 
 2. **Frontend Subdomain:**
+
    ```
    http://ukk.pengaduan-sarpras.my.id/
    → Should show: React aplikasi kamu
@@ -235,6 +244,7 @@ curl http://ukk.pengaduan-sarpras.my.id/
 **Di Cloudflare Dashboard:**
 
 1. **SSL/TLS → Overview:**
+
    - Set mode: **"Flexible"**
 
 2. **SSL/TLS → Edge Certificates:**
@@ -242,6 +252,7 @@ curl http://ukk.pengaduan-sarpras.my.id/
    - Automatic HTTPS Rewrites: **ON**
 
 **Test HTTPS:**
+
 ```bash
 # API
 curl -I https://api.pengaduan-sarpras.my.id/health
@@ -253,6 +264,7 @@ curl -I https://ukk.pengaduan-sarpras.my.id/
 ```
 
 **Browser test:**
+
 - `https://api.pengaduan-sarpras.my.id/health` ✅
 - `https://ukk.pengaduan-sarpras.my.id/` ✅
 
@@ -267,6 +279,7 @@ Untuk production, upgrade ke Full (Strict):
 Cloudflare Dashboard → SSL/TLS → Origin Server → Create Certificate
 
 Settings:
+
 - Private key: RSA (2048)
 - Hostnames:
   ```
@@ -302,10 +315,12 @@ nano ~/pengaduan-sarpras/nginx/nginx.conf
 ```
 
 **Uncomment HTTPS sections:**
+
 - Lines ~165-230 (API HTTPS server)
 - Lines ~235-280 (Frontend HTTPS server)
 
 **Enable HTTP→HTTPS redirects:**
+
 ```nginx
 # Line ~52 (API HTTP server):
 return 301 https://$host$request_uri;
@@ -315,6 +330,7 @@ return 301 https://$host$request_uri;
 ```
 
 **Save & restart:**
+
 ```bash
 docker compose restart nginx
 ```
@@ -322,6 +338,7 @@ docker compose restart nginx
 #### 4. Change Cloudflare SSL Mode
 
 Cloudflare Dashboard → SSL/TLS → Overview:
+
 - Change mode: **"Flexible"** → **"Full (Strict)"**
 
 #### 5. Update .env
@@ -331,11 +348,13 @@ nano .env
 ```
 
 Update:
+
 ```bash
 VITE_API_URL=https://api.pengaduan-sarpras.my.id
 ```
 
 Rebuild frontend:
+
 ```bash
 docker compose build --no-cache frontend
 docker compose up -d
@@ -346,22 +365,26 @@ docker compose up -d
 ## 🔍 Verification Checklist
 
 ### DNS:
+
 - [ ] `nslookup api.domainmu.com` returns Cloudflare IP
 - [ ] `nslookup ukk.domainmu.com` returns Cloudflare IP
 
 ### HTTP:
+
 - [ ] `curl http://api.domainmu.com/health` returns "API OK"
 - [ ] `curl http://ukk.domainmu.com/health` returns "Frontend OK"
 - [ ] `curl http://api.domainmu.com/api/lokasi` returns JSON
 - [ ] `curl http://ukk.domainmu.com/` returns HTML
 
 ### HTTPS (after SSL setup):
+
 - [ ] `curl https://api.domainmu.com/health` returns 200
 - [ ] `curl https://ukk.domainmu.com/` returns 200
 - [ ] HTTP redirects to HTTPS
 - [ ] SSL padlock showing in browser
 
 ### Application:
+
 - [ ] Frontend loads di browser via subdomain
 - [ ] API calls dari frontend ke api subdomain working
 - [ ] Login/Register berfungsi
@@ -373,6 +396,7 @@ docker compose up -d
 ## 📊 Example Configuration
 
 ### Your Setup:
+
 ```
 Domain: pengaduan-sarpras.my.id
 Server IP: 103.123.45.67
@@ -385,6 +409,7 @@ Subdomains:
 ```
 
 ### Frontend Config:
+
 ```javascript
 // .env atau vite config
 VITE_API_URL=https://api.pengaduan-sarpras.my.id
@@ -395,6 +420,7 @@ axios.get(`${VITE_API_URL}/api/pengaduan`)
 ```
 
 ### API Endpoints:
+
 ```
 https://api.pengaduan-sarpras.my.id/api/auth/login
 https://api.pengaduan-sarpras.my.id/api/pengaduan
@@ -410,6 +436,7 @@ etc...
 ### Issue 1: 502 Bad Gateway di API subdomain
 
 **Check:**
+
 ```bash
 docker compose ps backend
 docker compose logs backend
@@ -417,6 +444,7 @@ curl http://localhost:5000/
 ```
 
 **Solution:**
+
 - Ensure backend container running
 - Check backend logs for errors
 - Verify proxy_pass in nginx config
@@ -424,33 +452,40 @@ curl http://localhost:5000/
 ### Issue 2: CORS errors
 
 **Symptoms:**
+
 ```
 Access to XMLHttpRequest blocked by CORS policy
 ```
 
 **Solution:**
 Update CORS headers di nginx.conf (line ~94):
+
 ```nginx
 add_header Access-Control-Allow-Origin "https://ukk.domainmu.com" always;
 ```
 
 Atau di backend (server.js):
+
 ```javascript
-app.use(cors({
-  origin: 'https://ukk.pengaduan-sarpras.my.id',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: "https://ukk.pengaduan-sarpras.my.id",
+    credentials: true,
+  })
+);
 ```
 
 ### Issue 3: Frontend tidak bisa connect ke API
 
 **Check .env:**
+
 ```bash
 cat .env | grep VITE_API_URL
 # Should be: https://api.pengaduan-sarpras.my.id
 ```
 
 **Rebuild frontend:**
+
 ```bash
 docker compose build --no-cache frontend
 docker compose up -d
@@ -459,17 +494,20 @@ docker compose up -d
 ### Issue 4: SSL certificate errors
 
 **Check nginx logs:**
+
 ```bash
 docker compose logs nginx | grep -i ssl
 ```
 
 **Verify cert files:**
+
 ```bash
 ls -la nginx/ssl/
 # Should show: cert.pem, key.pem
 ```
 
 **Test nginx config:**
+
 ```bash
 docker compose exec nginx nginx -t
 ```
@@ -509,6 +547,7 @@ nslookup ukk.domainmu.com
 ## 🎯 Summary
 
 **Subdomain Structure:**
+
 ```
 api.domainmu.com  → Backend API (Port 5000 internal)
 ukk.domainmu.com  → Frontend (Static files)
@@ -517,11 +556,13 @@ www.domainmu.com  → Redirect to ukk.domainmu.com
 ```
 
 **Files Modified:**
+
 - ✅ `nginx/nginx.conf` - Subdomain configuration
 - ✅ `.env` - API URL updated
 - ✅ Frontend rebuild needed
 
 **Next Steps:**
+
 1. Update DNS records di Cloudflare (4 A records)
 2. Edit nginx.conf ganti domain placeholders
 3. Update .env dengan API URL

@@ -102,28 +102,43 @@ else
 fi
 echo ""
 
-# Step 5: Rebuild frontend
+# Step 5: Stop services
+echo -e "${YELLOW}🛑 Stopping services...${NC}"
+docker compose down
+echo ""
+
+# Step 6: Remove frontend volume (force refresh)
+echo -e "${YELLOW}🗑️  Removing frontend volume...${NC}"
+docker volume rm pengaduan-sarpras_frontend_dist 2>/dev/null || echo "Volume already removed"
+echo ""
+
+# Step 7: Rebuild frontend
 echo -e "${YELLOW}🔨 Rebuilding frontend with new API URL...${NC}"
 docker compose build --no-cache frontend
 echo -e "${GREEN}✅ Frontend rebuilt${NC}"
 echo ""
 
-# Step 6: Restart services
-echo -e "${YELLOW}🔄 Restarting services...${NC}"
-docker compose restart nginx
+# Step 8: Start all services
+echo -e "${YELLOW}� Starting all services...${NC}"
 docker compose up -d
 echo ""
 
 # Wait for services
 echo -e "${YELLOW}⏳ Waiting for services to be ready...${NC}"
-sleep 10
+sleep 15
 
-# Step 7: Check status
+# Step 9: Check status
 echo -e "${YELLOW}📊 Service status:${NC}"
 docker compose ps
 echo ""
 
-# Step 8: Test endpoints
+# Step 10: Check frontend files
+echo -e "${YELLOW}🔍 Checking frontend files...${NC}"
+echo "Files in nginx html directory:"
+docker compose exec nginx ls -lah /usr/share/nginx/html | head -10
+echo ""
+
+# Step 11: Test endpoints
 echo -e "${YELLOW}🧪 Testing endpoints...${NC}"
 echo ""
 
@@ -141,6 +156,15 @@ if curl -s -f "http://localhost/health" -H "Host: ${UKK_SUBDOMAIN}" > /dev/null;
     echo -e "${GREEN}✅ OK${NC}"
 else
     echo -e "${RED}❌ Failed${NC}"
+fi
+
+# Test Frontend HTML
+echo -n "Testing Frontend HTML... "
+RESPONSE=$(curl -s "http://localhost/" -H "Host: ${UKK_SUBDOMAIN}")
+if echo "$RESPONSE" | grep -q "<!DOCTYPE html\|<html"; then
+    echo -e "${GREEN}✅ OK - HTML detected${NC}"
+else
+    echo -e "${RED}❌ Failed - No HTML detected${NC}"
 fi
 
 echo ""

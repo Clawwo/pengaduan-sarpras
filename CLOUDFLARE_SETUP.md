@@ -5,8 +5,9 @@
 ✅ All Docker containers running (DONE!)
 ✅ Server IP address: `[your-server-ip]`
 ✅ Domain name (pilih salah satu):
-   - Domain berbayar (.com, .id, .net)
-   - Domain gratis (.my.id, .eu.org, Freenom)
+
+- Domain berbayar (.com, .id, .net)
+- Domain gratis (.my.id, .eu.org, Freenom)
 
 ---
 
@@ -17,7 +18,9 @@
 #### Option A: Beli Domain Berbayar (Recommended)
 
 **Provider Lokal Indonesia:**
+
 1. **Niagahoster** - https://www.niagahoster.co.id
+
    - .com: ~Rp 150.000/tahun
    - .id: ~Rp 200.000/tahun
    - .my.id: ~Rp 15.000/tahun (MURAH!)
@@ -73,6 +76,7 @@ nameserver2: gloria.ns.cloudflare.com
 Sekarang update di domain registrar kamu:
 
 ##### Jika beli di Niagahoster:
+
 1. Login ke https://panel.niagahoster.co.id
 2. Menu **"Domain"** → Pilih domain kamu
 3. Klik **"Kelola"** atau **"Manage Domain"**
@@ -82,6 +86,7 @@ Sekarang update di domain registrar kamu:
 7. **Save/Update**
 
 ##### Jika domain dari registrar lain:
+
 Proses serupa, cari menu Nameservers dan ganti ke Cloudflare nameservers.
 
 **Waktu propagasi:** 5 menit - 24 jam (biasanya 15-30 menit)
@@ -103,6 +108,7 @@ Setelah nameservers active, setup DNS records:
 Tambahkan 2 records berikut:
 
 **Record 1 - Root Domain (@):**
+
 ```
 Type:     A
 Name:     @ (atau domain.com)
@@ -112,6 +118,7 @@ TTL:      Auto
 ```
 
 **Record 2 - WWW Subdomain:**
+
 ```
 Type:     A
 Name:     www
@@ -123,12 +130,13 @@ TTL:      Auto
 **PENTING:** Pastikan **Proxy Status** adalah **"Proxied"** (orange cloud), bukan "DNS only"!
 
 #### Contoh:
+
 Jika domain kamu `pengaduan-sarpras.my.id` dan server IP `103.123.45.67`:
 
-| Type | Name | Content | Proxy | TTL |
-|------|------|---------|-------|-----|
-| A | @ | 103.123.45.67 | ☁️ Proxied | Auto |
-| A | www | 103.123.45.67 | ☁️ Proxied | Auto |
+| Type | Name | Content       | Proxy      | TTL  |
+| ---- | ---- | ------------- | ---------- | ---- |
+| A    | @    | 103.123.45.67 | ☁️ Proxied | Auto |
+| A    | www  | 103.123.45.67 | ☁️ Proxied | Auto |
 
 Klik **"Save"**
 
@@ -142,6 +150,7 @@ Klik **"Save"**
 2. Pilih mode **"Flexible"** (untuk awal)
 
 **SSL Modes:**
+
 - ❌ **Off** - Tidak aman, jangan pakai
 - ✅ **Flexible** - HTTPS antara user ↔ Cloudflare, HTTP antara Cloudflare ↔ Server (OK untuk awal)
 - ✅ **Full** - HTTPS di semua sisi, tapi SSL certificate self-signed OK
@@ -158,6 +167,7 @@ Klik **"Save"**
 #### Step 3: Minimum TLS Version
 
 Scroll ke bawah, set:
+
 - **Minimum TLS Version:** TLS 1.2
 - **TLS 1.3:** ON
 
@@ -228,6 +238,7 @@ dig pengaduan-sarpras.my.id
 ```
 
 **Online tools:**
+
 - https://www.whatsmydns.net (Cek propagasi global)
 - https://dnschecker.org
 
@@ -267,6 +278,7 @@ curl -I https://pengaduan-sarpras.my.id
 **Menu: Speed → Optimization**
 
 Enable:
+
 - ✅ Auto Minify (JavaScript, CSS, HTML)
 - ✅ Brotli compression
 - ✅ Early Hints
@@ -277,6 +289,7 @@ Enable:
 **Menu: Caching → Configuration**
 
 Settings:
+
 - **Caching Level:** Standard
 - **Browser Cache TTL:** Respect Existing Headers
 
@@ -296,11 +309,13 @@ Then:
 **Menu: Security → Settings**
 
 Enable:
+
 - ✅ Security Level: Medium
 - ✅ Challenge Passage: 30 minutes
 - ✅ Browser Integrity Check: ON
 
 **Bot Fight Mode:**
+
 - Enable untuk block bad bots
 
 #### 4. Firewall Rules (WAF)
@@ -308,6 +323,7 @@ Enable:
 **Menu: Security → WAF**
 
 Free plan includes:
+
 - DDoS protection
 - Basic rate limiting
 - IP blocking
@@ -315,6 +331,7 @@ Free plan includes:
 **Create custom rule (example):**
 
 **Block non-Indonesia traffic (optional):**
+
 ```
 Field: Country
 Operator: does not equal
@@ -323,6 +340,7 @@ Action: Block
 ```
 
 **Rate limit login endpoint:**
+
 ```
 Field: URI Path
 Operator: equals
@@ -340,6 +358,7 @@ Free plan: 3 page rules
 **Example rules:**
 
 **Rule 1: Cache API responses**
+
 ```
 If URL matches: *pengaduan-sarpras.my.id/api/lokasi*
 Settings:
@@ -348,6 +367,7 @@ Settings:
 ```
 
 **Rule 2: Force HTTPS**
+
 ```
 If URL matches: http://*pengaduan-sarpras.my.id/*
 Settings:
@@ -366,7 +386,7 @@ Untuk security terbaik, upgrade ke Full (Strict) mode:
 2. Klik **"Create Certificate"**
 3. Settings:
    - **Private key type:** RSA (2048)
-   - **Hostnames:** 
+   - **Hostnames:**
      - `pengaduan-sarpras.my.id`
      - `*.pengaduan-sarpras.my.id`
    - **Certificate Validity:** 15 years
@@ -377,6 +397,7 @@ Untuk security terbaik, upgrade ke Full (Strict) mode:
 Cloudflare akan show 2 text boxes:
 
 **Origin Certificate** (Public Key):
+
 ```
 -----BEGIN CERTIFICATE-----
 MIIEpDCCA...
@@ -386,6 +407,7 @@ MIIEpDCCA...
 ```
 
 **Private Key:**
+
 ```
 -----BEGIN PRIVATE KEY-----
 MIIEvQIBA...
@@ -505,6 +527,7 @@ openssl s_client -connect pengaduan-sarpras.my.id:443 -servername pengaduan-sarp
 ```
 
 Browser test:
+
 - Buka `https://pengaduan-sarpras.my.id`
 - Click padlock icon
 - Check certificate (should be valid, issued by Cloudflare)
@@ -514,18 +537,21 @@ Browser test:
 ## 🎯 Quick Reference Commands
 
 ### Check DNS
+
 ```bash
 nslookup your-domain.com
 dig your-domain.com
 ```
 
 ### Check SSL
+
 ```bash
 curl -I https://your-domain.com
 openssl s_client -connect your-domain.com:443
 ```
 
 ### Check Application
+
 ```bash
 curl https://your-domain.com/
 curl https://your-domain.com/api/
@@ -533,6 +559,7 @@ curl https://your-domain.com/health
 ```
 
 ### Restart Services
+
 ```bash
 docker compose restart
 docker compose restart nginx
@@ -540,6 +567,7 @@ docker compose restart backend
 ```
 
 ### View Logs
+
 ```bash
 docker compose logs -f nginx
 docker compose logs -f backend
@@ -598,12 +626,14 @@ Dashboard → Your Domain
 **Symptoms:** Cannot access domain, DNS lookup fails
 
 **Check:**
+
 ```bash
 nslookup your-domain.com
 # Should return Cloudflare IPs (104.x.x.x or 172.x.x.x)
 ```
 
 **Solution:**
+
 - Wait for DNS propagation (up to 24 hours)
 - Check nameservers at registrar
 - Verify DNS records in Cloudflare
@@ -613,6 +643,7 @@ nslookup your-domain.com
 **Symptoms:** "Your connection is not private" error
 
 **Solution:**
+
 - Check SSL mode in Cloudflare (use Flexible first)
 - Verify Origin Certificate installed on server
 - Check nginx config for SSL paths
@@ -623,6 +654,7 @@ nslookup your-domain.com
 **Symptoms:** Cloudflare shows 502 error
 
 **Check:**
+
 ```bash
 docker compose ps  # All services running?
 docker compose logs backend  # Backend errors?
@@ -630,6 +662,7 @@ curl http://localhost:5000/  # Backend responding?
 ```
 
 **Solution:**
+
 - Ensure backend is running and healthy
 - Check backend logs for errors
 - Verify VITE_API_URL in .env
@@ -640,6 +673,7 @@ curl http://localhost:5000/  # Backend responding?
 **Symptoms:** Some resources load over HTTP
 
 **Solution:**
+
 - Enable "Automatic HTTPS Rewrites" in Cloudflare
 - Check hardcoded HTTP URLs in code
 - Ensure all API calls use HTTPS
@@ -649,6 +683,7 @@ curl http://localhost:5000/  # Backend responding?
 **Symptoms:** Browser shows "ERR_TOO_MANY_REDIRECTS"
 
 **Solution:**
+
 - Check SSL mode in Cloudflare (should match server config)
 - Remove duplicate redirect rules in nginx
 - Clear browser cache
@@ -658,6 +693,7 @@ curl http://localhost:5000/  # Backend responding?
 ## 📊 Expected Results
 
 ### Before Cloudflare:
+
 ```
 User → http://103.123.45.67 → Server
 - No SSL
@@ -667,6 +703,7 @@ User → http://103.123.45.67 → Server
 ```
 
 ### After Cloudflare:
+
 ```
 User → https://domain.com (Cloudflare) → Server
 - ✅ SSL/TLS encryption
@@ -682,6 +719,7 @@ User → https://domain.com (Cloudflare) → Server
 ## 🎓 For Your Report
 
 **Screenshots to take:**
+
 1. Cloudflare dashboard showing domain added
 2. DNS records configuration
 3. SSL/TLS settings (Full Strict mode)
@@ -692,6 +730,7 @@ User → https://domain.com (Cloudflare) → Server
 8. Performance optimization features
 
 **Architecture diagram:**
+
 ```
 ┌─────────┐      HTTPS        ┌────────────┐      HTTP/HTTPS     ┌────────┐
 │  User   │ ─────────────────→│ Cloudflare │ ──────────────────→ │ Server │
@@ -708,6 +747,6 @@ User → https://domain.com (Cloudflare) → Server
 
 **Created:** November 13, 2025  
 **Status:** Ready for implementation  
-**Estimated time:** 30-60 minutes  
+**Estimated time:** 30-60 minutes
 
 🚀 **Ready to connect your domain? Follow the steps above!**
