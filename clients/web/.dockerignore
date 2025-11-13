@@ -29,7 +29,7 @@ Thumbs.db
 
 # Documentation
 README.md
-*.md
+TROUBLESHOOTING.md
 docs/
 
 # Tests
@@ -39,12 +39,9 @@ tests/
 *.spec.js
 __tests__/
 
-# Source files (akan di-build)
-src/
-public/
+# Build artifacts (already built, will be rebuilt)
+dist/
+build/
 
-# Build tools config
-vite.config.js
+# Development config (not needed in production)
 eslint.config.js
-tsconfig.json
-jsconfig.json
