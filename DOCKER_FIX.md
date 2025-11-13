@@ -1,13 +1,17 @@
 # 🔧 Fix Docker Build Error
 
 ## Problem
+
 Error saat build frontend:
+
 ```
 [vite:build-html] Failed to resolve /src/main.jsx from /app/index.html
 ```
 
 ## Root Cause
+
 File `.dockerignore` terlalu agresif, mengexclude file-file penting yang dibutuhkan untuk build:
+
 - ❌ `src/` (source code)
 - ❌ `public/` (static assets)
 - ❌ `vite.config.js` (build config)
@@ -18,6 +22,7 @@ File `.dockerignore` terlalu agresif, mengexclude file-file penting yang dibutuh
 ### 1. Fixed `clients/web/.dockerignore`
 
 **Before (WRONG):**
+
 ```dockerignore
 # Source files (akan di-build)
 src/
@@ -29,6 +34,7 @@ jsconfig.json
 ```
 
 **After (CORRECT):**
+
 ```dockerignore
 # Build artifacts (already built, will be rebuilt)
 dist/
@@ -45,6 +51,7 @@ File tetap menggunakan `COPY . .` karena `.dockerignore` sudah benar.
 ## Test Build
 
 ### Local Test (Windows)
+
 ```powershell
 cd d:\Developments\Tech\React\React-Projects\pengaduan-sarpras
 
@@ -59,6 +66,7 @@ docker compose up -d
 ```
 
 ### Server Test (Linux)
+
 ```bash
 cd ~/pengaduan-sarpras
 
@@ -126,6 +134,7 @@ docker run -p 8080:80 pengaduan-sarpras-frontend
 ## Additional Debug Commands
 
 ### Check .dockerignore is working
+
 ```bash
 # Create temporary build context
 cd clients/web
@@ -140,6 +149,7 @@ tar -czf - . | tar -tz | grep -E "^(src|public|vite.config)"
 ```
 
 ### Inspect build process
+
 ```bash
 # Build with verbose output
 docker compose build --progress=plain frontend
@@ -149,6 +159,7 @@ docker compose build --no-cache frontend
 ```
 
 ### Check files inside container
+
 ```bash
 # Start container in interactive mode
 docker run -it --entrypoint /bin/sh pengaduan-sarpras-frontend
@@ -164,6 +175,7 @@ exit
 ## Common Issues & Solutions
 
 ### Issue 1: Still getting same error
+
 ```bash
 # Clear Docker build cache
 docker builder prune -a
@@ -173,6 +185,7 @@ docker compose build --no-cache frontend
 ```
 
 ### Issue 2: Different error "Cannot find module"
+
 ```bash
 # Check package.json exists
 ls -la clients/web/package.json
@@ -182,6 +195,7 @@ docker compose run --rm frontend npm list
 ```
 
 ### Issue 3: Build succeeds but app doesn't work
+
 ```bash
 # Check if dist/ folder created
 docker compose run --rm frontend ls -la dist/
@@ -191,6 +205,7 @@ docker exec pengaduan-frontend ls -la /usr/share/nginx/html
 ```
 
 ### Issue 4: Environment variables not working
+
 ```bash
 # Check ARG passed during build
 docker compose build --build-arg VITE_API_URL=http://your-server-ip frontend
@@ -206,10 +221,12 @@ services:
 ## Files Modified
 
 ### ✅ `clients/web/.dockerignore`
+
 - Removed: `src/`, `public/`, `vite.config.js`, `jsconfig.json`
 - Kept: `node_modules`, `.env*`, test files, documentation
 
 ### ✅ `clients/web/Dockerfile`
+
 - Kept simple `COPY . .` approach
 - `.dockerignore` handles exclusions properly
 
@@ -230,6 +247,7 @@ Before deploying to server, verify:
 ## Next Steps
 
 1. **If build succeeds locally:**
+
    ```bash
    git add .
    git commit -m "Fix Docker build: Update .dockerignore for frontend"
@@ -237,14 +255,15 @@ Before deploying to server, verify:
    ```
 
 2. **Deploy to server:**
+
    ```bash
    # SSH to server
    ssh deploy@your-server-ip
-   
+
    # Pull latest changes
    cd ~/pengaduan-sarpras
    git pull origin main
-   
+
    # Deploy
    ./deploy.sh
    ```
@@ -259,11 +278,13 @@ Before deploying to server, verify:
 To avoid similar issues in the future:
 
 1. **Test Docker build before commit:**
+
    ```bash
    docker compose build
    ```
 
 2. **Use proper .dockerignore patterns:**
+
    - Exclude build outputs: `dist/`, `build/`
    - Exclude dev dependencies: `node_modules/` (will be reinstalled)
    - Include source code: `src/`, `public/`
