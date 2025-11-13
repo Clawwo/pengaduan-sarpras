@@ -1,6 +1,7 @@
 # 🚀 Quick Fix: Frontend Tidak Muncul
 
 ## Problem
+
 Nginx default page muncul, bukan aplikasi React.
 
 ## Solusi Cepat
