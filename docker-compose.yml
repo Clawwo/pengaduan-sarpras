@@ -1,5 +1,5 @@
 services:
-  # MySQL Database
+  # MySQL Database (tetap sama)
   mysql:
     image: mysql:8.2.0
     container_name: pengaduan-mysql
@@ -26,7 +26,7 @@ services:
       retries: 10
       start_period: 60s
 
-  # Backend Node.js
+  # Backend Node.js (tetap sama)
   backend:
     build:
       context: ./server
@@ -62,7 +62,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Frontend Web (React + Vite) - Build only
+  # Frontend Web - PERBAIKI BAGIAN INI
   frontend:
     build:
       context: ./clients/web
@@ -74,10 +74,10 @@ services:
     depends_on:
       - backend
     volumes:
-      - frontend_dist:/tmp/dist
+      - frontend_dist:/usr/share/nginx/html
     networks:
       - pengaduan-network
-    command: sh -c "cp -r /usr/share/nginx/html/* /tmp/dist/ && echo 'Frontend files copied' && exit 0"
+    # HAPUS command line yang lama, biarkan Dockerfile yang handle
 
   # Nginx Reverse Proxy
   nginx:
@@ -96,7 +96,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - frontend_dist:/usr/share/nginx/html:ro
+      - frontend_dist:/usr/share/nginx/html:ro # Baca dari volume yang sama
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - nginx_logs:/var/log/nginx
     networks:

@@ -3,26 +3,32 @@
 ## 📋 Issues Fixed
 
 ### 1. ❌ Backend Unhealthy
+
 **Problem:** `container pengaduan-backend is unhealthy`
 
 **Root Cause:** Healthcheck mencoba curl ke `/` tapi route tidak ada
 
 **Fix:** Changed healthcheck URL to `/api/health` in:
+
 - ✅ `docker-compose.yml` line 59
 - ✅ `server/Dockerfile` line 40
 
 ### 2. ❌ Frontend Not Displaying
+
 **Problem:** Nginx default page muncul, bukan React app
 
 **Root Cause:** Volume mounting mismatch
 
 **Fix:** Changed frontend to "build-only" container in:
+
 - ✅ `docker-compose.yml` lines 64-77
 
 ## 🎯 Files Updated
 
 ### Modified Files:
+
 1. **docker-compose.yml**
+
    - Backend healthcheck: `http://localhost:5000/` → `http://localhost:5000/api/health`
    - Added `start_period: 40s` to backend healthcheck
    - Frontend: Changed to run-once container with volume copy
@@ -32,6 +38,7 @@
    - Healthcheck URL: `http://localhost:5000/` → `http://localhost:5000/api/health`
 
 ### New Files:
+
 1. **fix-backend.sh** - Fix backend unhealthy issue
 2. **fix-frontend.sh** - Fix frontend display issue
 3. **fix-all.sh** - All-in-one fix script
@@ -53,6 +60,7 @@ chmod +x fix-all.sh fix-backend.sh fix-frontend.sh
 ```
 
 This will:
+
 - ✅ Stop containers
 - ✅ Clean volumes (optional)
 - ✅ Rebuild all images
@@ -66,12 +74,14 @@ This will:
 ## 🔧 Specific Fixes
 
 ### Fix Backend Only:
+
 ```bash
 chmod +x fix-backend.sh
 ./fix-backend.sh
 ```
 
 ### Fix Frontend Only:
+
 ```bash
 chmod +x fix-frontend.sh
 ./fix-frontend.sh
@@ -80,7 +90,9 @@ chmod +x fix-frontend.sh
 ## 📝 Manual Fix Steps
 
 ### Step 1: Upload Files
+
 Upload these updated files to server:
+
 - `docker-compose.yml` ⭐ CRITICAL
 - `server/Dockerfile` ⭐ CRITICAL
 - `fix-all.sh`
@@ -89,6 +101,7 @@ Upload these updated files to server:
 - `BACKEND_FIX.md`
 
 ### Step 2: Stop & Clean
+
 ```bash
 cd ~/pengaduan-sarpras
 docker compose down
@@ -96,22 +109,26 @@ docker volume rm pengaduan-sarpras_frontend_dist
 ```
 
 ### Step 3: Rebuild
+
 ```bash
 docker compose build --no-cache backend
 docker compose build --no-cache frontend
 ```
 
 ### Step 4: Start
+
 ```bash
 docker compose up -d
 ```
 
 ### Step 5: Monitor (2 minutes)
+
 ```bash
 watch -n 5 docker compose ps
 ```
 
 Expected:
+
 ```
 pengaduan-mysql       Up (healthy)
 pengaduan-backend     Up (healthy)     ✅ Should be healthy now
@@ -120,6 +137,7 @@ pengaduan-nginx       Up (healthy)
 ```
 
 ### Step 6: Verify
+
 ```bash
 # Backend health
 curl http://localhost:5000/api/health
@@ -146,16 +164,19 @@ curl http://localhost/ | head -20
 ### Backend Still Unhealthy?
 
 **Check logs:**
+
 ```bash
 docker compose logs backend --tail=50
 ```
 
 **Common issues:**
+
 - Database connection failed → Check .env credentials
 - Port already in use → `sudo lsof -i :5000`
 - Module not found → Rebuild with `--no-cache`
 
 **Fix:**
+
 ```bash
 ./fix-backend.sh
 ```
@@ -163,6 +184,7 @@ docker compose logs backend --tail=50
 ### Frontend Still Shows Nginx Page?
 
 **Check files:**
+
 ```bash
 docker compose exec nginx ls -lah /usr/share/nginx/html
 ```
@@ -170,6 +192,7 @@ docker compose exec nginx ls -lah /usr/share/nginx/html
 **Should see:** index.html, assets/, favicon.ico
 
 **If empty:**
+
 ```bash
 ./fix-frontend.sh
 ```
@@ -177,6 +200,7 @@ docker compose exec nginx ls -lah /usr/share/nginx/html
 ### All Services Unhealthy?
 
 **Nuclear option:**
+
 ```bash
 docker compose down -v
 docker compose build --no-cache
@@ -186,6 +210,7 @@ docker compose up -d
 ## 📊 Expected Results
 
 ### Container Status:
+
 ```
 NAME                STATUS
 pengaduan-mysql     Up 2 minutes (healthy)
@@ -195,6 +220,7 @@ pengaduan-nginx     Up 1 minute (healthy)
 ```
 
 ### Health Endpoints:
+
 ```bash
 # Backend
 $ curl http://localhost:5000/api/health
@@ -210,6 +236,7 @@ Frontend OK
 ```
 
 ### Frontend:
+
 ```bash
 $ curl http://localhost/ | head -5
 <!DOCTYPE html>
@@ -224,28 +251,33 @@ $ curl http://localhost/ | head -5
 After deployment is successful:
 
 ### 1. Setup Domain (if not yet)
+
 - Buy domain (.my.id recommended)
 - Add to Cloudflare
 - Update nameservers
 
 ### 2. Configure Subdomains
+
 ```bash
 ./setup-subdomain.sh your-domain.com
 ```
 
 This will:
+
 - Update nginx.conf with your domain
 - Update .env with API URL
 - Rebuild frontend
 - Test endpoints
 
 ### 3. Setup SSL
+
 - Generate Cloudflare Origin Certificate
 - Upload to `nginx/ssl/`
 - Uncomment HTTPS blocks in nginx.conf
 - Change Cloudflare SSL to "Full (Strict)"
 
 ### 4. Test Production
+
 - Test all endpoints with domain
 - Test login/register
 - Test create pengaduan
@@ -265,21 +297,25 @@ This will:
 If issues persist after all fixes:
 
 1. Check all logs:
+
 ```bash
 docker compose logs
 ```
 
 2. Check .env file:
+
 ```bash
 cat .env | grep -v "PASSWORD\|SECRET\|KEY"
 ```
 
 3. Check network:
+
 ```bash
 docker network inspect pengaduan-sarpras_pengaduan-network
 ```
 
 4. Full system info:
+
 ```bash
 docker compose ps
 docker compose exec backend node -v
