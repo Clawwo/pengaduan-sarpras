@@ -1,5 +1,5 @@
 services:
-  # MySQL Database (tetap sama)
+  # MySQL Database
   mysql:
     image: mysql:8.2.0
     container_name: pengaduan-mysql
@@ -26,7 +26,7 @@ services:
       retries: 10
       start_period: 60s
 
-  # Backend Node.js (tetap sama)
+  # Backend Node.js
   backend:
     build:
       context: ./server
@@ -62,7 +62,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Frontend Web - PERBAIKI BAGIAN INI
+  # Frontend Web - SUDAH DIPERBAIKI
   frontend:
     build:
       context: ./clients/web
@@ -70,16 +70,15 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL}
     container_name: pengaduan-frontend
-    restart: "no"
+    restart: unless-stopped # DIUBAH dari "no"
     depends_on:
       - backend
     volumes:
       - frontend_dist:/usr/share/nginx/html
     networks:
       - pengaduan-network
-    # HAPUS command line yang lama, biarkan Dockerfile yang handle
 
-  # Nginx Reverse Proxy
+  # Nginx Reverse Proxy - SUDAH DIPERBAIKI
   nginx:
     build:
       context: ./nginx
@@ -87,16 +86,14 @@ services:
     container_name: pengaduan-nginx
     restart: always
     depends_on:
-      backend:
-        condition: service_healthy
-      frontend:
-        condition: service_completed_successfully
+      - backend
+      - frontend # DIUBAH - tidak pakai condition
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - frontend_dist:/usr/share/nginx/html:ro # Baca dari volume yang sama
+      - frontend_dist:/usr/share/nginx/html:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - nginx_logs:/var/log/nginx
     networks:
