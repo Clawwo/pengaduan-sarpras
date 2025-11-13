@@ -24,7 +24,9 @@ app.use(
       "http://192.168.137.163:5000", // Mobile app (local IP)
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/, // Any local network IP
       /^http:\/\/localhost:\d+$/, // Any localhost port
-      "exp://", // Expo Go
+      "exp://",
+      "farelhry.my.id", 
+      "ukk.farelhry.my.id",      
     ],
     credentials: true,
   })
