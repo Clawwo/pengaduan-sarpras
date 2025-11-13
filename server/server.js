@@ -16,17 +16,21 @@ import notificationRoutes from "./routes/notificationRoute.js";
 dotenv.config();
 const app = express();
 
-// CORS configuration - allow mobile app access
+// CORS configuration - allow mobile app and production domain
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // Web app
+      "http://localhost:5173", // Web app local
       "http://192.168.137.163:5000", // Mobile app (local IP)
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/, // Any local network IP
       /^http:\/\/localhost:\d+$/, // Any localhost port
-      "exp://",
-      "https://farelhry.my.id",
-      "https://ukk.farelhry.my.id",
+      "exp://", // Expo Go
+      "https://farelhry.my.id", // Production frontend
+      "http://farelhry.my.id", // Production frontend (no SSL)
+      "https://api.farelhry.my.id", // Production API subdomain
+      "http://api.farelhry.my.id", // Production API subdomain (no SSL)
+      "https://ukk.farelhry.my.id", // Production UKK subdomain
+      "http://ukk.farelhry.my.id", // Production UKK subdomain (no SSL)
       "http://localhost:3000",
     ],
     credentials: true,
