@@ -1,6 +1,7 @@
 # 🔧 MySQL Container Unhealthy - Quick Fix
 
 ## 🐛 Problem
+
 ```
 Container pengaduan-mysql is unhealthy
 dependency failed to start: container pengaduan-mysql is unhealthy
@@ -17,13 +18,15 @@ dependency failed to start: container pengaduan-mysql is unhealthy
 ### 1. Fixed `docker-compose.yml`
 
 #### Removed deprecated version:
+
 ```diff
 - version: "3.8"
-- 
+-
   services:
 ```
 
 #### Improved MySQL healthcheck:
+
 ```diff
   healthcheck:
 -   test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
@@ -38,6 +41,7 @@ dependency failed to start: container pengaduan-mysql is unhealthy
 ```
 
 **Changes:**
+
 - ✅ Removed password dari healthcheck (tidak perlu, lebih aman)
 - ✅ Increased `interval` 10s → 15s
 - ✅ Increased `timeout` 5s → 10s
@@ -47,6 +51,7 @@ dependency failed to start: container pengaduan-mysql is unhealthy
 ### 2. Created `fix-mysql.sh` script
 
 Automated troubleshooting script untuk:
+
 - Stop semua containers
 - Optional: Remove MySQL volume (fresh start)
 - Verify .env configuration
@@ -134,6 +139,7 @@ curl http://localhost:5000/
 ## 📊 Understanding MySQL Initialization Time
 
 ### First Run (Fresh Database):
+
 ```
 0-20s:   Creating data directory, system tables
 20-40s:  Running init scripts (stored_procedures.sql)
@@ -143,6 +149,7 @@ curl http://localhost:5000/
 ```
 
 ### Subsequent Runs:
+
 ```
 0-10s:   Loading existing data
 10-15s:  Starting MySQL server
@@ -154,11 +161,13 @@ curl http://localhost:5000/
 ### Issue 1: "unhealthy" after 60 seconds
 
 **Possible causes:**
+
 - Init scripts terlalu besar
 - Server resource terbatas (RAM)
 - Disk I/O slow
 
 **Solution:**
+
 ```bash
 # Check init script size
 ls -lh server/database/*.sql
@@ -178,11 +187,13 @@ healthcheck:
 ### Issue 2: Password authentication failed
 
 **Symptoms:**
+
 ```
 Access denied for user 'root'@'localhost'
 ```
 
 **Solution:**
+
 ```bash
 # Check .env file
 cat .env | grep DB_
@@ -197,10 +208,12 @@ DB_ROOT_PASSWORD='MyPass$123'  # Single quotes!
 ### Issue 3: Init scripts not running
 
 **Symptoms:**
+
 - Database created but empty
 - No tables or stored procedures
 
 **Solution:**
+
 ```bash
 # Verify files exist
 ls -la server/database/
@@ -220,11 +233,13 @@ docker compose logs -f mysql
 ### Issue 4: Port 3306 already in use
 
 **Symptoms:**
+
 ```
 Error starting userland proxy: listen tcp 0.0.0.0:3306: bind: address already in use
 ```
 
 **Solution:**
+
 ```bash
 # Check what's using port 3306
 sudo netstat -tulpn | grep 3306
@@ -240,6 +255,7 @@ ports:
 ## 📝 Best Practices
 
 ### 1. Environment Variables
+
 ```bash
 # Use strong passwords without special chars for Docker
 DB_ROOT_PASSWORD=MySecurePassword123
@@ -249,6 +265,7 @@ DB_PASSWORD=AnotherSecurePass456
 ```
 
 ### 2. Database Initialization
+
 ```bash
 # Keep init scripts optimized
 # Split large files if > 10MB
@@ -257,6 +274,7 @@ DB_PASSWORD=AnotherSecurePass456
 ```
 
 ### 3. Monitoring
+
 ```bash
 # Always check logs after startup
 docker compose logs -f mysql
@@ -269,6 +287,7 @@ docker compose ps
 ```
 
 ### 4. Backup Before Fresh Start
+
 ```bash
 # Before removing volume
 ./backup.sh
@@ -279,18 +298,19 @@ docker compose exec mysql mysqldump -u root -p${DB_ROOT_PASSWORD} ${DB_NAME} > b
 
 ## 🎯 Summary
 
-| Change | Before | After | Impact |
-|--------|--------|-------|--------|
-| Docker Compose version | `version: "3.8"` | Removed | No warning |
-| Healthcheck start_period | None | 60s | MySQL has time to init |
-| Healthcheck interval | 10s | 15s | Less aggressive |
-| Healthcheck timeout | 5s | 10s | More time to respond |
-| Healthcheck retries | 5 | 10 | More attempts |
-| Password in healthcheck | Yes | No | More secure |
+| Change                   | Before           | After   | Impact                 |
+| ------------------------ | ---------------- | ------- | ---------------------- |
+| Docker Compose version   | `version: "3.8"` | Removed | No warning             |
+| Healthcheck start_period | None             | 60s     | MySQL has time to init |
+| Healthcheck interval     | 10s              | 15s     | Less aggressive        |
+| Healthcheck timeout      | 5s               | 10s     | More time to respond   |
+| Healthcheck retries      | 5                | 10      | More attempts          |
+| Password in healthcheck  | Yes              | No      | More secure            |
 
 ## 🚀 Next Steps
 
 1. **Apply fixes:**
+
    ```bash
    git pull origin main  # Get latest docker-compose.yml
    chmod +x fix-mysql.sh
@@ -298,12 +318,14 @@ docker compose exec mysql mysqldump -u root -p${DB_ROOT_PASSWORD} ${DB_NAME} > b
    ```
 
 2. **Verify deployment:**
+
    ```bash
    docker compose ps
    docker compose logs -f
    ```
 
 3. **Test application:**
+
    ```bash
    curl http://localhost:5000/  # Backend
    curl http://localhost/        # Frontend
@@ -319,5 +341,6 @@ docker compose exec mysql mysqldump -u root -p${DB_ROOT_PASSWORD} ${DB_NAME} > b
 **Status:** ✅ Fixed  
 **Last Updated:** November 13, 2025  
 **Files Modified:**
+
 - `docker-compose.yml` - Healthcheck optimized
 - `fix-mysql.sh` - Automated fix script created
