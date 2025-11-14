@@ -2,6 +2,8 @@
 
 Aplikasi web dan mobile untuk mengelola pengaduan sarana dan prasarana sekolah/institusi.
 
+> **🚀 Quick Deploy:** Lihat [FRESH_START_GUIDE.md](./FRESH_START_GUIDE.md) untuk panduan lengkap setup VPS dari nol!
+
 ## 📋 Features
 
 - ✅ **User Management** - Registrasi, login, profile management
@@ -228,6 +230,27 @@ IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_id
 VITE_API_URL=https://your-domain.com
 ```
 
+## 🚀 Production Deployment
+
+### Fresh VPS Setup (Ubuntu 22.04)
+```bash
+# 1. Run automated setup script
+wget https://raw.githubusercontent.com/YOUR_REPO/pengaduan-sarpras/main/fresh-setup-vps.sh
+chmod +x fresh-setup-vps.sh
+sudo ./fresh-setup-vps.sh
+
+# 2. Follow the complete guide
+# See FRESH_START_GUIDE.md for detailed step-by-step instructions
+```
+
+### Quick Deploy Command Reference
+See [QUICK_COMMANDS.md](./QUICK_COMMANDS.md) for:
+- Daily commands (status, logs, restart)
+- Debugging guides
+- Database backup/restore
+- SSL certificate management
+- Emergency recovery procedures
+
 ## 🛠️ Useful Commands
 
 ### Development
@@ -243,52 +266,75 @@ npm run build        # Build for production
 npm run preview      # Preview production build
 ```
 
-### Production (PM2)
+### Production
 ```bash
-pm2 status                    # Check status
-pm2 logs pengaduan-backend    # View logs
-pm2 restart pengaduan-backend # Restart app
-pm2 monit                     # Monitor resources
-```
+# Status checks
+pm2 status                    # Check PM2 processes
+sudo systemctl status nginx   # Check Nginx
+sudo systemctl status mysql   # Check MySQL
 
-### Database
-```bash
-# Backup
-mysqldump -u pengaduan_user -p pengaduan_sarpras > backup.sql
+# View logs
+pm2 logs pengaduan-backend --lines 50
+sudo tail -f /var/log/nginx/error.log
 
-# Restore
-mysql -u pengaduan_user -p pengaduan_sarpras < backup.sql
+# Restart services
+pm2 restart pengaduan-backend
+sudo systemctl restart nginx
+
+# Database backup
+mysqldump -u clawwo -p pengaduan_sarpras > backup-$(date +%Y%m%d).sql
 ```
 
 ## 🐛 Troubleshooting
 
-### Backend not starting
+### Backend 500 Error
 ```bash
-# Check logs
-pm2 logs pengaduan-backend
+# Check logs first
+pm2 logs pengaduan-backend --lines 100
 
-# Check database connection
-mysql -u pengaduan_user -p pengaduan_sarpras
+# Common issues:
+# 1. Database not imported
+mysql -u clawwo -p pengaduan_sarpras -e "SHOW TABLES;"
 
-# Verify .env file
-cat server/.env
+# 2. Wrong environment variables
+cat /var/www/pengaduan-sarpras/server/.env
+
+# 3. Backend not running
+pm2 status
+curl http://localhost:5000/api/health
 ```
 
-### Frontend shows blank page
+### CORS Errors
 ```bash
-# Rebuild frontend
-cd clients/web
+# Check ORIGIN matches frontend URL
+grep ORIGIN /var/www/pengaduan-sarpras/server/.env
+
+# Should be: ORIGIN=https://yourdomain.com (with https if SSL enabled)
+# Edit and restart
+nano /var/www/pengaduan-sarpras/server/.env
+pm2 restart pengaduan-backend
+```
+
+### Frontend Not Loading
+```bash
+# Check files exist
+ls -la /var/www/pengaduan-sarpras-web/
+
+# Rebuild if needed
+cd /var/www/pengaduan-sarpras/clients/web
 npm run build
+sudo cp -r dist/* /var/www/pengaduan-sarpras-web/
 
-# Check nginx config
+# Test Nginx config
 sudo nginx -t
-sudo systemctl status nginx
+sudo systemctl restart nginx
 ```
 
-### Database connection error
-- Verify credentials in `.env`
-- Check MySQL is running: `sudo systemctl status mysql`
-- Test connection: `mysql -u pengaduan_user -p`
+### Complete Reset (Last Resort)
+```bash
+# See FRESH_START_GUIDE.md section "Clean Up Old Files"
+# Or run fresh-setup-vps.sh again
+```
 
 ## 📄 License
 
