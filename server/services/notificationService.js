@@ -133,7 +133,7 @@ export const getUserFCMTokens = async (userId) => {
 export const getFCMTokensByRole = async (role) => {
   // Normalize role to lowercase for comparison
   const normalizedRole = role ? role.toLowerCase() : "";
-  
+
   const [rows] = await pool.query(
     `SELECT DISTINCT ft.fcm_token 
      FROM fcm_tokens ft 

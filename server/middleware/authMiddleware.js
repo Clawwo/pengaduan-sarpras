@@ -21,7 +21,11 @@ const authMiddleware = (roles = []) => {
       // Check if role is required and if user has the required role
       if (roles.length && !normalizedRoles.includes(userRole)) {
         console.log(
-          `Access denied - User role: "${decoded.role}" (normalized: "${userRole}"), Required roles: ${JSON.stringify(roles)}`
+          `Access denied - User role: "${
+            decoded.role
+          }" (normalized: "${userRole}"), Required roles: ${JSON.stringify(
+            roles
+          )}`
         );
         return res.status(403).json({
           message: "Akses ditolak",

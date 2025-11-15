@@ -117,7 +117,9 @@ export const markAsReadController = async (req, res) => {
     const affectedRows = await markNotificationAsRead(id, userId);
 
     if (affectedRows === 0) {
-      return res.status(404).json({ message: "Notification not found or already read" });
+      return res
+        .status(404)
+        .json({ message: "Notification not found or already read" });
     }
 
     res.json({ message: "Notification marked as read" });

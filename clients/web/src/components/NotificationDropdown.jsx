@@ -161,7 +161,7 @@ const NotificationDropdown = () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token");
-      
+
       await axios.patch(
         `${apiUrl}/api/notifications/read-all`,
         {},
@@ -179,7 +179,7 @@ const NotificationDropdown = () => {
       previousNotificationIds.current.clear();
       setNotifications([]);
       setUnreadCount(0);
-      
+
       // Refetch to sync with server
       setTimeout(() => {
         fetchNotifications();
@@ -200,22 +200,25 @@ const NotificationDropdown = () => {
   // Get icon & color based on notification type and role
   const getNotificationIcon = (notification) => {
     const { type, role_target, status } = notification.data || {};
-    
+
     // For status updates (pengguna)
     if (type === "status_update") {
       if (status === "Selesai") return { icon: "✅", color: "text-green-400" };
       if (status === "Diproses") return { icon: "🔄", color: "text-blue-400" };
-      if (status === "Ditinjau") return { icon: "👁️", color: "text-purple-400" };
+      if (status === "Ditinjau")
+        return { icon: "👁️", color: "text-purple-400" };
       if (status === "Ditolak") return { icon: "❌", color: "text-red-400" };
       return { icon: "📋", color: "text-neutral-400" };
     }
-    
+
     // For new pengaduan (admin & petugas)
     if (type === "new_pengaduan") {
-      if (role_target === "admin") return { icon: "📋", color: "text-blue-400" };
-      if (role_target === "petugas") return { icon: "🔧", color: "text-orange-400" };
+      if (role_target === "admin")
+        return { icon: "📋", color: "text-blue-400" };
+      if (role_target === "petugas")
+        return { icon: "🔧", color: "text-orange-400" };
     }
-    
+
     // Default
     return { icon: "🔔", color: "text-neutral-400" };
   };
@@ -226,15 +229,12 @@ const NotificationDropdown = () => {
     const diffInSeconds = Math.floor((now - sent) / 1000);
 
     if (diffInSeconds < 60) return "Baru saja";
-    if (diffInSeconds < 3600)
-      return `${Math.floor(diffInSeconds / 60)}m`;
-    if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)}j`;
-    if (diffInSeconds < 604800)
-      return `${Math.floor(diffInSeconds / 86400)}h`;
-    return new Date(sentAt).toLocaleDateString("id-ID", { 
-      day: 'numeric', 
-      month: 'short' 
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}j`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}h`;
+    return new Date(sentAt).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
     });
   };
 
@@ -295,7 +295,8 @@ const NotificationDropdown = () => {
                     <button
                       onClick={async () => {
                         try {
-                          const permission = await Notification.requestPermission();
+                          const permission =
+                            await Notification.requestPermission();
                           setPermissionGranted(permission === "granted");
                           if (permission === "granted") {
                             new Notification("Notifikasi Aktif! 🎉", {
@@ -351,7 +352,7 @@ const NotificationDropdown = () => {
               <div>
                 {notifications.map((notification) => {
                   const { icon, color } = getNotificationIcon(notification);
-                  
+
                   return (
                     <div
                       key={notification.id}

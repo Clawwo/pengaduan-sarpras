@@ -13,7 +13,11 @@ import {
   getPengaduanReport as getPengaduanReportService,
 } from "../services/pengaduanService.js";
 import { createRiwayatAksi as createRiwayatAksiService } from "../services/riwayatAksiService.js";
-import { notifyAdmins, notifyPetugas, notifyUser } from "./notificationController.js";
+import {
+  notifyAdmins,
+  notifyPetugas,
+  notifyUser,
+} from "./notificationController.js";
 
 export const createPengaduan = async (req, res) => {
   try {
@@ -89,7 +93,7 @@ export const createPengaduan = async (req, res) => {
           role_target: "admin",
         }
       );
-      
+
       // Notif untuk Petugas: Fokus ke tindakan penanganan
       await notifyPetugas(
         {
@@ -102,7 +106,7 @@ export const createPengaduan = async (req, res) => {
           role_target: "petugas",
         }
       );
-      
+
       console.log("✅ Notifikasi terkirim ke admin & petugas");
     } catch (notifError) {
       console.error("⚠️ Gagal kirim notifikasi:", notifError);
@@ -185,23 +189,23 @@ export const updatePengaduanStatus = async (req, res) => {
     // 🔔 Kirim notifikasi ke user pemilik pengaduan dengan pesan yang jelas
     try {
       const statusMessages = {
-        "Selesai": {
+        Selesai: {
           title: "✅ Pengaduan Selesai",
           body: `"${oldData.nama_pengaduan}" telah selesai ditangani`,
         },
-        "Diproses": {
+        Diproses: {
           title: "🔄 Pengaduan Sedang Ditangani",
           body: `"${oldData.nama_pengaduan}" sedang dalam proses penanganan`,
         },
-        "Ditinjau": {
+        Ditinjau: {
           title: "👁️ Pengaduan Sedang Ditinjau",
           body: `"${oldData.nama_pengaduan}" sedang ditinjau oleh petugas`,
         },
-        "Ditolak": {
+        Ditolak: {
           title: "❌ Pengaduan Ditolak",
           body: `"${oldData.nama_pengaduan}" tidak dapat diproses`,
         },
-        "Menunggu": {
+        Menunggu: {
           title: "⏳ Pengaduan Menunggu",
           body: `"${oldData.nama_pengaduan}" menunggu penanganan`,
         },
@@ -212,17 +216,13 @@ export const updatePengaduanStatus = async (req, res) => {
         body: `"${oldData.nama_pengaduan}" - ${status}`,
       };
 
-      await notifyUser(
-        oldData.id_user,
-        message,
-        {
-          url: "/dashboard/riwayat",
-          type: "status_update",
-          role_target: "pengguna",
-          pengaduan_id: id,
-          status: status,
-        }
-      );
+      await notifyUser(oldData.id_user, message, {
+        url: "/dashboard/riwayat",
+        type: "status_update",
+        role_target: "pengguna",
+        pengaduan_id: id,
+        status: status,
+      });
       console.log("✅ Notifikasi ke user terkirim");
     } catch (notifError) {
       console.error("⚠️ Gagal kirim notifikasi:", notifError);

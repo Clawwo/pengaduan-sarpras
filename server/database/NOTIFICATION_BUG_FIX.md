@@ -3,21 +3,26 @@
 ## Problems Identified
 
 ### Bug 1: Petugas Not Receiving Notifications ✅ FIXED
+
 **Symptom**: When pengaduan created, admin receives notification but petugas doesn't
 
 **Root Causes**:
+
 1. `notifyPetugas` function called but not imported in pengaduanController
 2. `getFCMTokensByRole()` query using exact match on `u.role` instead of case-insensitive
 3. Notification history queries in `notifyAdmins()` and `notifyPetugas()` using exact role match
 
 **Impact**: After Bug Fix 1 (role normalization), all roles stored as lowercase. Queries without LOWER() failed to match roles, causing:
+
 - FCM tokens not retrieved → notifications not sent
 - Notification history not saved → no record of notifications
 
 ### Bug 2: Stuck Notification Count ✅ FIXED
+
 **Symptom**: User has 6 unread notifications, some 1 day old, won't clear
 
 **Root Causes**:
+
 1. `markNotificationAsRead()` didn't filter by `user_id` → security issue
 2. Users trying to mark notifications as read but query affected wrong rows
 3. Old notifications potentially orphaned from role normalization changes
@@ -27,6 +32,7 @@
 ## Fixes Applied
 
 ### Fix 1a: Add Missing Import
+
 **File**: `server/controllers/pengaduanController.js` (Line 16)
 
 ```javascript
@@ -34,19 +40,23 @@
 import { notifyAdmins, notifyUser } from "./notificationController.js";
 
 // AFTER
-import { notifyAdmins, notifyPetugas, notifyUser } from "./notificationController.js";
+import {
+  notifyAdmins,
+  notifyPetugas,
+  notifyUser,
+} from "./notificationController.js";
 ```
 
 ### Fix 1b: Case-Insensitive FCM Token Query
+
 **File**: `server/services/notificationService.js` (getFCMTokensByRole)
 
 ```javascript
 // BEFORE
 export const getFCMTokensByRole = async (role) => {
-  const [rows] = await pool.query(
-    `... WHERE u.role = ? AND ft.is_active = 1`,
-    [role]
-  );
+  const [rows] = await pool.query(`... WHERE u.role = ? AND ft.is_active = 1`, [
+    role,
+  ]);
   return rows.map((row) => row.fcm_token);
 };
 
@@ -62,6 +72,7 @@ export const getFCMTokensByRole = async (role) => {
 ```
 
 ### Fix 1c: Case-Insensitive Notification History Queries
+
 **File**: `server/controllers/notificationController.js`
 
 ```javascript
@@ -89,6 +100,7 @@ const [petugasUsers] = await pool.query(
 ```
 
 ### Fix 2a: Add user_id Verification to markAsRead
+
 **File**: `server/controllers/notificationController.js` (markAsReadController)
 
 ```javascript
@@ -103,18 +115,21 @@ export const markAsReadController = async (req, res) => {
 export const markAsReadController = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
-  
+
   const affectedRows = await markNotificationAsRead(id, userId);
-  
+
   if (affectedRows === 0) {
-    return res.status(404).json({ message: "Notification not found or already read" });
+    return res
+      .status(404)
+      .json({ message: "Notification not found or already read" });
   }
-  
+
   res.json({ message: "Notification marked as read" });
 };
 ```
 
 ### Fix 2b: Update Service to Filter by user_id
+
 **File**: `server/services/notificationService.js` (markNotificationAsRead)
 
 ```javascript
@@ -138,6 +153,7 @@ export const markNotificationAsRead = async (notificationId, userId) => {
 ```
 
 ### Fix 2c: Enhanced Frontend Error Handling
+
 **File**: `clients/web/src/components/NotificationDropdown.jsx`
 
 ```javascript
@@ -146,7 +162,7 @@ const markAsRead = async (notificationId) => {
   try {
     const token = localStorage.getItem("token");
     await axios.patch(`${apiUrl}/api/notifications/${notificationId}/read`, ...);
-    
+
     previousNotificationIds.current.delete(notificationId);
     setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
     setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -164,7 +180,7 @@ const markAllAsRead = async () => {
     setIsLoading(true);
     const token = localStorage.getItem("token");
     await axios.patch(`${apiUrl}/api/notifications/read-all`, ...);
-    
+
     previousNotificationIds.current.clear();
     setNotifications([]);
     setUnreadCount(0);
@@ -175,7 +191,7 @@ const markAllAsRead = async () => {
     previousNotificationIds.current.clear();
     setNotifications([]);
     setUnreadCount(0);
-    
+
     // Refetch to sync with server
     setTimeout(() => {
       fetchNotifications();
@@ -191,6 +207,7 @@ const markAllAsRead = async () => {
 ## Testing Checklist
 
 ### Test 1: Petugas Notification Delivery
+
 1. ✅ Restart backend: `pm2 restart pengaduan-backend`
 2. ✅ Login as pengguna user
 3. ✅ Create new pengaduan
@@ -199,6 +216,7 @@ const markAllAsRead = async () => {
 6. ✅ Verify notification count increases
 
 ### Test 2: Clear Stuck Notifications
+
 1. ✅ Login as user with stuck notifications
 2. ✅ Run cleanup SQL from `fix_stuck_notifications.sql`
 3. ✅ Click "Tandai Semua Sudah Dibaca"
@@ -206,6 +224,7 @@ const markAllAsRead = async () => {
 5. ✅ Verify no error in console
 
 ### Test 3: Mark Single Notification
+
 1. ✅ Receive new notification
 2. ✅ Click single notification item
 3. ✅ Verify it disappears from list
@@ -219,6 +238,7 @@ const markAllAsRead = async () => {
 **File**: `server/database/fix_stuck_notifications.sql`
 
 Use queries in this file to:
+
 1. Check current unread notifications
 2. Find orphaned notifications
 3. Delete orphaned records
@@ -226,20 +246,21 @@ Use queries in this file to:
 5. Verify fix worked
 
 **Example Usage**:
+
 ```sql
 -- Check user's stuck notifications
-SELECT * FROM notification_history 
+SELECT * FROM notification_history
 WHERE user_id = 123 AND is_read = 0
 ORDER BY sent_at DESC;
 
 -- Clear stuck notifications for specific user
-UPDATE notification_history 
-SET is_read = 1 
+UPDATE notification_history
+SET is_read = 1
 WHERE user_id = 123 AND is_read = 0;
 
 -- Verify
 SELECT COUNT(*) as unread_count
-FROM notification_history 
+FROM notification_history
 WHERE user_id = 123 AND is_read = 0;
 ```
 
@@ -248,12 +269,14 @@ WHERE user_id = 123 AND is_read = 0;
 ## Files Changed
 
 ### Backend
+
 - ✅ `server/controllers/pengaduanController.js` - Added notifyPetugas import
 - ✅ `server/services/notificationService.js` - Fixed getFCMTokensByRole, markNotificationAsRead
 - ✅ `server/controllers/notificationController.js` - Fixed role queries, added user_id verification
 - ✅ `server/database/fix_stuck_notifications.sql` - New cleanup script
 
 ### Frontend
+
 - ✅ `clients/web/src/components/NotificationDropdown.jsx` - Enhanced error handling
 
 ---
@@ -261,6 +284,7 @@ WHERE user_id = 123 AND is_read = 0;
 ## Security Improvements
 
 1. **Notification Ownership Verification**
+
    - markAsReadController now verifies user owns notification
    - Prevents users from marking other users' notifications as read
    - Returns 404 if notification not found or doesn't belong to user
@@ -274,6 +298,7 @@ WHERE user_id = 123 AND is_read = 0;
 ## Performance Considerations
 
 1. **Frontend Polling** (10 seconds)
+
    - Acceptable for real-time notifications
    - Consider WebSocket upgrade for > 100 concurrent users
 
@@ -288,22 +313,24 @@ WHERE user_id = 123 AND is_read = 0;
 ## Deployment Steps
 
 1. **Commit Changes**
+
    ```bash
    git add .
    git commit -m "fix: Notification delivery & stuck count issues
-   
+
    - Fixed petugas not receiving notifications (import + role queries)
    - Fixed stuck notification count (user_id verification)
    - Enhanced frontend error handling
    - Added database cleanup script
-   
+
    Bug 1: notifyPetugas not imported + case-insensitive role queries
    Bug 2: markAsRead didn't verify user_id ownership
-   
+
    Files: pengaduanController, notificationService, notificationController, NotificationDropdown"
    ```
 
 2. **Deploy to VPS**
+
    ```bash
    cd /var/www/pengaduan-sarpras
    git pull origin main
@@ -311,6 +338,7 @@ WHERE user_id = 123 AND is_read = 0;
    ```
 
 3. **Run Cleanup** (if needed)
+
    ```bash
    mysql -u root -p pengaduan_sarpras < server/database/fix_stuck_notifications.sql
    ```
@@ -325,10 +353,12 @@ WHERE user_id = 123 AND is_read = 0;
 ## Known Issues / Future Improvements
 
 1. **Notification Retention**
+
    - Consider auto-deleting notifications older than 30 days
    - Add cron job: `0 2 * * * DELETE FROM notification_history WHERE sent_at < DATE_SUB(NOW(), INTERVAL 30 DAY);`
 
 2. **Real-time Updates**
+
    - Current: 10-second polling
    - Future: WebSocket for instant delivery
 
@@ -344,12 +374,14 @@ WHERE user_id = 123 AND is_read = 0;
 If issues occur:
 
 1. **Revert Changes**
+
    ```bash
    git revert HEAD
    pm2 restart pengaduan-backend
    ```
 
 2. **Emergency Fix**
+
    ```sql
    -- Clear all stuck unread (if users complaining)
    UPDATE notification_history SET is_read = 1 WHERE is_read = 0;
@@ -365,6 +397,7 @@ If issues occur:
 ## Contact
 
 Issues or questions? Check:
+
 - Error logs: `pm2 logs pengaduan-backend`
 - Database: Run queries in `fix_stuck_notifications.sql`
 - Frontend console: Check for API errors
