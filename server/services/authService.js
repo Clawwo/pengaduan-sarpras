@@ -19,9 +19,12 @@ export const isUsernameExist = async (username) => {
 
 export const createUser = async (username, password, nama_pengguna, role) => {
   const hashedPassword = await bcrypt.hash(password, 10);
+  // Normalize role to lowercase before saving to database
+  const normalizedRole = role ? role.trim().toLowerCase() : "pengguna";
+
   const [result] = await pool.query(
     "INSERT INTO pengaduan_sarpras_user (username, password, nama_pengguna, role) VALUES (?,?,?,?)",
-    [username, hashedPassword, nama_pengguna, role]
+    [username, hashedPassword, nama_pengguna, normalizedRole]
   );
   return result.insertId;
 };

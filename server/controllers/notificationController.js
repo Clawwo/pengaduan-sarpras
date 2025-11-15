@@ -112,8 +112,13 @@ export const getUnreadNotificationsController = async (req, res) => {
 export const markAsReadController = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id;
 
-    await markNotificationAsRead(id);
+    const affectedRows = await markNotificationAsRead(id, userId);
+
+    if (affectedRows === 0) {
+      return res.status(404).json({ message: "Notification not found or already read" });
+    }
 
     res.json({ message: "Notification marked as read" });
   } catch (error) {
@@ -194,9 +199,9 @@ export const notifyAdmins = async (notification, data = {}) => {
     );
 
     // Save to notification history (untuk setiap admin)
-    // Get all admin user IDs
+    // Get all admin user IDs (role sudah lowercase di database)
     const [adminUsers] = await pool.query(
-      "SELECT id_user FROM pengaduan_sarpras_user WHERE role = 'admin'"
+      "SELECT id_user FROM pengaduan_sarpras_user WHERE LOWER(role) = 'admin'"
     );
 
     for (const admin of adminUsers) {
@@ -239,8 +244,9 @@ export const notifyPetugas = async (notification, data = {}) => {
     );
 
     // Save to notification history (untuk setiap petugas)
+    // Get all petugas user IDs (role sudah lowercase di database)
     const [petugasUsers] = await pool.query(
-      "SELECT id_user FROM pengaduan_sarpras_user WHERE role = 'petugas'"
+      "SELECT id_user FROM pengaduan_sarpras_user WHERE LOWER(role) = 'petugas'"
     );
 
     for (const petugas of petugasUsers) {

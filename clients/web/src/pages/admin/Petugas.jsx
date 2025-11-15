@@ -54,7 +54,7 @@ const AdminPetugas = () => {
       const { data } = await axios.get(`${apiUrl}/api/petugas`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setRows(data.data.items);
+      setRows(Array.isArray(data) ? data : data?.data || []);
     } catch (err) {
       setError(
         err?.response?.data?.message || err.message || "Gagal memuat petugas"

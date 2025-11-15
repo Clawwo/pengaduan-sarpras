@@ -50,11 +50,11 @@ export const getUnreadNotifications = async (userId, limit = 10) => {
 /**
  * Mark notification as read
  */
-export const markNotificationAsRead = async (notificationId) => {
+export const markNotificationAsRead = async (notificationId, userId) => {
   try {
     const [result] = await pool.query(
-      "UPDATE notification_history SET is_read = 1 WHERE id = ?",
-      [notificationId]
+      "UPDATE notification_history SET is_read = 1 WHERE id = ? AND user_id = ? AND is_read = 0",
+      [notificationId, userId]
     );
     return result.affectedRows;
   } catch (error) {
@@ -131,12 +131,15 @@ export const getUserFCMTokens = async (userId) => {
  * Get FCM tokens by role
  */
 export const getFCMTokensByRole = async (role) => {
+  // Normalize role to lowercase for comparison
+  const normalizedRole = role ? role.toLowerCase() : "";
+  
   const [rows] = await pool.query(
     `SELECT DISTINCT ft.fcm_token 
      FROM fcm_tokens ft 
      JOIN pengaduan_sarpras_user u ON ft.user_id = u.id_user 
-     WHERE u.role = ? AND ft.is_active = 1`,
-    [role]
+     WHERE LOWER(u.role) = ? AND ft.is_active = 1`,
+    [normalizedRole]
   );
   return rows.map((row) => row.fcm_token);
 };

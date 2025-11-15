@@ -13,7 +13,7 @@ import {
   getPengaduanReport as getPengaduanReportService,
 } from "../services/pengaduanService.js";
 import { createRiwayatAksi as createRiwayatAksiService } from "../services/riwayatAksiService.js";
-import { notifyAdmins, notifyUser } from "./notificationController.js";
+import { notifyAdmins, notifyPetugas, notifyUser } from "./notificationController.js";
 
 export const createPengaduan = async (req, res) => {
   try {
@@ -75,19 +75,35 @@ export const createPengaduan = async (req, res) => {
       id_temporary: final_id_temporary,
     });
 
-    // 🔔 Kirim notifikasi ke semua admin
+    // 🔔 Kirim notifikasi ke admin dan petugas dengan pesan berbeda
     try {
+      // Notif untuk Admin: Fokus ke tindakan review
       await notifyAdmins(
         {
-          title: "Pengaduan Baru 📋",
-          body: `${nama_pengaduan} - Menunggu ditinjau`,
+          title: "📋 Pengaduan Baru Masuk",
+          body: `${nama_pengaduan} memerlukan peninjauan Anda`,
         },
         {
           url: "/admin/pengaduan",
           type: "new_pengaduan",
+          role_target: "admin",
         }
       );
-      console.log("✅ Notifikasi ke admin terkirim");
+      
+      // Notif untuk Petugas: Fokus ke tindakan penanganan
+      await notifyPetugas(
+        {
+          title: "🔧 Tugas Baru",
+          body: `${nama_pengaduan} perlu ditangani`,
+        },
+        {
+          url: "/petugas/pengaduan",
+          type: "new_pengaduan",
+          role_target: "petugas",
+        }
+      );
+      
+      console.log("✅ Notifikasi terkirim ke admin & petugas");
     } catch (notifError) {
       console.error("⚠️ Gagal kirim notifikasi:", notifError);
       // Jangan blok pengaduan jika notifikasi gagal
@@ -166,24 +182,43 @@ export const updatePengaduanStatus = async (req, res) => {
       tgl_selesai
     );
 
-    // 🔔 Kirim notifikasi ke user pemilik pengaduan
+    // 🔔 Kirim notifikasi ke user pemilik pengaduan dengan pesan yang jelas
     try {
-      const statusEmoji = {
-        Menunggu: "⏳",
-        Diproses: "🔄",
-        Selesai: "✅",
-        Ditolak: "❌",
+      const statusMessages = {
+        "Selesai": {
+          title: "✅ Pengaduan Selesai",
+          body: `"${oldData.nama_pengaduan}" telah selesai ditangani`,
+        },
+        "Diproses": {
+          title: "🔄 Pengaduan Sedang Ditangani",
+          body: `"${oldData.nama_pengaduan}" sedang dalam proses penanganan`,
+        },
+        "Ditinjau": {
+          title: "👁️ Pengaduan Sedang Ditinjau",
+          body: `"${oldData.nama_pengaduan}" sedang ditinjau oleh petugas`,
+        },
+        "Ditolak": {
+          title: "❌ Pengaduan Ditolak",
+          body: `"${oldData.nama_pengaduan}" tidak dapat diproses`,
+        },
+        "Menunggu": {
+          title: "⏳ Pengaduan Menunggu",
+          body: `"${oldData.nama_pengaduan}" menunggu penanganan`,
+        },
+      };
+
+      const message = statusMessages[status] || {
+        title: "📋 Status Pengaduan Diperbarui",
+        body: `"${oldData.nama_pengaduan}" - ${status}`,
       };
 
       await notifyUser(
         oldData.id_user,
-        {
-          title: `Status Pengaduan ${statusEmoji[status] || "📋"}`,
-          body: `${oldData.nama_pengaduan} - ${status}`,
-        },
+        message,
         {
           url: "/dashboard/riwayat",
           type: "status_update",
+          role_target: "pengguna",
           pengaduan_id: id,
           status: status,
         }

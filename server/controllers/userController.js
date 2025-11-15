@@ -63,6 +63,9 @@ export const updateProfile = async (req, res) => {
     res.json({ message: "Profil berhasil diperbarui" });
   } catch (error) {
     console.error("Error updateProfile:", error);
+    if (error.message.includes("sudah terdaftar")) {
+      return res.status(409).json({ message: error.message });
+    }
     res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 };
