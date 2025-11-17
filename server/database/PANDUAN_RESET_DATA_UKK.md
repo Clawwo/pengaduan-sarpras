@@ -15,6 +15,7 @@ mysqldump -u root -p pengaduan_sarpras > backup_pengaduan_sarpras_$(date +%Y%m%d
 ```
 
 **Atau pakai MySQL Workbench:**
+
 1. Klik kanan database `pengaduan_sarpras`
 2. Pilih **Data Export**
 3. Centang semua tabel
@@ -29,15 +30,18 @@ mysqldump -u root -p pengaduan_sarpras > backup_pengaduan_sarpras_$(date +%Y%m%d
 
 1. **Buka MySQL Workbench**
 2. **Connect ke database**
+
    - Host: localhost
    - Username: root (atau sesuai .env)
    - Password: (sesuai .env)
 
 3. **Buka script SQL**
+
    - Menu: **File** → **Open SQL Script**
    - Pilih file: `server/database/reset_and_populate_demo_data.sql`
 
 4. **Jalankan script**
+
    - Klik tombol **⚡ Execute** (atau tekan `Ctrl + Shift + Enter`)
    - Tunggu sampai selesai (± 10-15 detik)
 
@@ -108,6 +112,7 @@ SELECT 'LOKASI', COUNT(*) FROM pengaduan_sarpras_lokasi;
 ```
 
 **Expected Output:**
+
 ```
 Tabel       | Jumlah
 ------------|-------
@@ -123,6 +128,7 @@ LOKASI      | 18
 ### **2. Test Login Aplikasi**
 
 **Restart backend dulu:**
+
 ```bash
 cd server
 pm2 restart pengaduan-backend
@@ -132,14 +138,15 @@ npm run dev
 
 **Test login di frontend:**
 
-| Username | Password | Role | Nama |
-|----------|----------|------|------|
-| `admin` | `password123` | Admin | Administrator |
-| `petugas1` | `password123` | Petugas | Budi Santoso |
-| `siswa1` | `password123` | Pengguna | Ahmad Fauzi |
-| `guru1` | `password123` | Pengguna | Pak Hendra |
+| Username   | Password      | Role     | Nama          |
+| ---------- | ------------- | -------- | ------------- |
+| `admin`    | `password123` | Admin    | Administrator |
+| `petugas1` | `password123` | Petugas  | Budi Santoso  |
+| `siswa1`   | `password123` | Pengguna | Ahmad Fauzi   |
+| `guru1`    | `password123` | Pengguna | Pak Hendra    |
 
 **Coba login sebagai `siswa1`:**
+
 1. Buka web/mobile app
 2. Login dengan `siswa1` / `password123`
 3. Harus berhasil masuk
@@ -150,6 +157,7 @@ npm run dev
 ### **3. Cek Pengaduan di Dashboard**
 
 **Login sebagai Admin:**
+
 1. Username: `admin` / Password: `password123`
 2. Masuk ke halaman **Dashboard Pengaduan**
 3. Harus terlihat 7 pengaduan dengan status:
@@ -165,10 +173,12 @@ npm run dev
 ### **Skenario 1: Pengguna Buat Pengaduan Baru**
 
 1. **Login sebagai Siswa**
+
    - Username: `siswa2`
    - Password: `password123`
 
 2. **Buat Pengaduan Baru**
+
    - Nama: "Meja Lab Multimedia Goyang"
    - Deskripsi: "Meja di Lab Multimedia baris depan goyang, bautnya kendor"
    - Lokasi: Lab Multimedia
@@ -186,14 +196,17 @@ npm run dev
 ### **Skenario 2: Admin Review & Assign Petugas**
 
 1. **Login sebagai Admin**
+
    - Username: `admin`
    - Password: `password123`
 
 2. **Lihat Pengaduan Baru**
+
    - Masuk ke halaman **Pengaduan**
    - Lihat pengaduan "Meja Lab Multimedia Goyang" (status: Menunggu)
 
 3. **Assign ke Petugas**
+
    - Klik detail pengaduan
    - Pilih petugas: **Budi Santoso**
    - Ubah status: **Menunggu** → **Diproses**
@@ -208,14 +221,17 @@ npm run dev
 ### **Skenario 3: Petugas Tangani Pengaduan**
 
 1. **Login sebagai Petugas**
+
    - Username: `petugas1`
    - Password: `password123`
 
 2. **Lihat Tugas Baru**
+
    - Masuk ke halaman **Pengaduan Saya**
    - Lihat pengaduan yang di-assign ke Budi Santoso
 
 3. **Update Progress**
+
    - Klik pengaduan "Meja Lab Multimedia Goyang"
    - Isi **Saran Petugas**: "Meja sudah diperbaiki. Baut sudah dikencangkan. Aman digunakan kembali."
    - Ubah status: **Diproses** → **Selesai**
@@ -230,10 +246,12 @@ npm run dev
 ### **Skenario 4: Pengguna Cek Status Pengaduan**
 
 1. **Login kembali sebagai Siswa**
+
    - Username: `siswa2`
    - Password: `password123`
 
 2. **Lihat Notifikasi**
+
    - Klik icon notifikasi (bell 🔔)
    - Harus ada notifikasi baru: "✅ Pengaduan Selesai"
 
@@ -249,17 +267,20 @@ npm run dev
 ### **Rangkuman Data:**
 
 - **Total User**: 8 orang
+
   - 1 Admin
   - 3 Petugas
   - 4 Pengguna (2 siswa + 2 guru)
 
 - **Total Pengaduan**: 7 pengaduan
+
   - Selesai: 2 (AC Lab, Kursi Patah)
   - Diproses: 2 (Proyektor, Keyboard)
   - Menunggu: 2 (Toilet, Ring Basket)
   - Ditolak: 1 (Request komputer baru)
 
 - **Total Lokasi**: 18 lokasi
+
   - 4 Ruang Kelas
   - 4 Laboratorium
   - 2 Ruang Guru
@@ -281,32 +302,42 @@ npm run dev
 ## 🎤 POIN PRESENTASI YANG BISA DIJELASKAN
 
 ### **1. Sistem Multi-Role**
+
 "Sistem ini memiliki 3 role berbeda:
+
 - **Admin**: Kelola sistem, review pengaduan, assign petugas
 - **Petugas**: Tangani pengaduan yang di-assign
 - **Pengguna**: Buat pengaduan, cek status"
 
 ### **2. Workflow Pengaduan**
+
 "Alur pengaduan dari awal sampai selesai:
+
 1. Pengguna buat pengaduan (status: Menunggu)
 2. Admin review & assign ke petugas (status: Diproses)
 3. Petugas tangani & update status (status: Selesai)
 4. Pengguna dapat notifikasi otomatis"
 
 ### **3. Real-time Notification**
+
 "Sistem notifikasi real-time menggunakan Firebase FCM:
+
 - Admin & Petugas langsung dapat notifikasi saat ada pengaduan baru
 - Pengguna dapat notifikasi saat status pengaduan berubah
 - Notifikasi muncul di web & mobile app"
 
 ### **4. Data Management**
+
 "Sistem mengelola data sarana prasarana secara terstruktur:
+
 - Master data: Lokasi, Kategori, Item
 - Tracking kondisi barang: Baik, Rusak Ringan, Rusak Berat
 - History tracking: Semua aksi tercatat di riwayat"
 
 ### **5. Security & Validation**
+
 "Keamanan sistem:
+
 - Password di-hash dengan bcrypt (tidak bisa dibaca)
 - JWT authentication untuk setiap request
 - Role-based access control (admin vs petugas vs pengguna)
@@ -317,11 +348,13 @@ npm run dev
 ## ❌ TROUBLESHOOTING
 
 ### **Error: Access denied for user**
+
 ```
 Error: Access denied for user 'root'@'localhost'
 ```
 
 **Solusi:**
+
 - Cek username & password MySQL di file `.env`
 - Pastikan MySQL service running
 - Coba login manual: `mysql -u root -p`
@@ -329,11 +362,13 @@ Error: Access denied for user 'root'@'localhost'
 ---
 
 ### **Error: Database doesn't exist**
+
 ```
 Error: Unknown database 'pengaduan_sarpras'
 ```
 
 **Solusi:**
+
 ```sql
 -- Buat database dulu
 CREATE DATABASE pengaduan_sarpras;
@@ -346,11 +381,13 @@ SOURCE reset_and_populate_demo_data.sql;
 ---
 
 ### **Error: Table doesn't exist**
+
 ```
 Error: Table 'pengaduan_sarpras.pengaduan_sarpras_user' doesn't exist
 ```
 
 **Solusi:**
+
 - Tabel belum dibuat
 - Import dulu struktur tabel dari file SQL schema
 - Atau restore dari backup database lama
@@ -358,11 +395,13 @@ Error: Table 'pengaduan_sarpras.pengaduan_sarpras_user' doesn't exist
 ---
 
 ### **Error: Foreign key constraint fails**
+
 ```
 Error: Cannot add or update a child row: a foreign key constraint fails
 ```
 
 **Solusi:**
+
 - Script sudah ada `SET FOREIGN_KEY_CHECKS = 0;`
 - Pastikan script dijalankan **SECARA LENGKAP** (jangan sebagian)
 - Jangan hapus baris `SET FOREIGN_KEY_CHECKS`
@@ -370,11 +409,13 @@ Error: Cannot add or update a child row: a foreign key constraint fails
 ---
 
 ### **Login gagal setelah reset**
+
 ```
 Error: Username atau password salah
 ```
 
 **Solusi:**
+
 - Password sudah di-hash dengan bcrypt
 - Gunakan password: `password123` (bukan hash-nya)
 - Restart backend setelah reset database:
@@ -418,21 +459,25 @@ pm2 restart pengaduan-backend
 ## 🎯 SUMMARY
 
 **File yang digunakan:**
+
 - `server/database/reset_and_populate_demo_data.sql` → Script reset & populate
 
 **Akun untuk demo:**
+
 - Admin: `admin` / `password123`
 - Petugas: `petugas1` / `password123`
 - Siswa: `siswa1` / `password123`
 - Guru: `guru1` / `password123`
 
 **Data yang diisi:**
+
 - 8 User (1 admin, 3 petugas, 4 pengguna)
 - 7 Pengaduan (variasi status: Selesai, Diproses, Menunggu, Ditolak)
 - 18 Lokasi (Kelas, Lab, Ruang Guru, dll)
 - 25 Item Sarana Prasarana (Komputer, AC, Kursi, dll)
 
 **Estimasi waktu:**
+
 - Backup: 2 menit
 - Reset & populate: 1 menit
 - Verifikasi: 3 menit
@@ -443,6 +488,7 @@ pm2 restart pengaduan-backend
 **Semoga sukses presentasi UKK besok! 🎓🚀**
 
 **Tips terakhir:**
+
 - Latihan dulu alur demo (buat pengaduan → assign → update → notifikasi)
 - Siapkan penjelasan teknis (JWT, bcrypt, REST API)
 - Tunjukkan dokumentasi backend (`DOKUMENTASI_BACKEND_UKK.md`)

@@ -13,17 +13,17 @@ const password = "password123";
 async function generateHashes() {
   console.log("🔐 Generating bcrypt hashes for password: 'password123'\n");
   console.log("Copy hash ini ke file SQL:\n");
-  console.log("=" .repeat(80));
-  
+  console.log("=".repeat(80));
+
   const users = [
     "admin",
-    "petugas1", 
+    "petugas1",
     "petugas2",
     "petugas3",
     "siswa1",
     "siswa2",
     "guru1",
-    "guru2"
+    "guru2",
   ];
 
   for (const username of users) {
@@ -32,8 +32,10 @@ async function generateHashes() {
     console.log(`'${hash}',\n`);
   }
 
-  console.log("=" .repeat(80));
-  console.log("\n✅ Selesai! Copy hash di atas ke reset_and_populate_demo_data.sql");
+  console.log("=".repeat(80));
+  console.log(
+    "\n✅ Selesai! Copy hash di atas ke reset_and_populate_demo_data.sql"
+  );
   console.log("📍 Ganti di bagian INSERT INTO pengaduan_sarpras_user");
 }
 
