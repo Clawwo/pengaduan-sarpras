@@ -1,7 +1,9 @@
 # ⚡ QUICK START - RESET DATABASE UNTUK PRESENTASI UKK
 
-**Tanggal:** 17 November 2025  
-**Tujuan:** Reset data lama & isi dengan data presentasi yang realistis
+**Tanggal Presentasi:** 18 November 2025  
+**Database:** pengaduan_sarpras  
+**Password Semua User:** `password123`  
+**Waktu Eksekusi:** ~5 menit
 
 ---
 
@@ -10,12 +12,14 @@
 ### **1. BACKUP DATABASE LAMA** (1 menit) ⚠️ WAJIB!
 
 **Windows PowerShell:**
+
 ```powershell
 cd "d:\Developments\Tech\React\React-Projects\pengaduan-sarpras\server\database"
 .\backup_database.ps1
 ```
 
 **Atau manual via MySQL Workbench:**
+
 - Klik kanan database → Data Export → Export to Self-Contained File
 
 ---
@@ -23,6 +27,7 @@ cd "d:\Developments\Tech\React\React-Projects\pengaduan-sarpras\server\database"
 ### **2. RESET & POPULATE DATA** (2 menit)
 
 **Metode A: MySQL Workbench** ⭐ RECOMMENDED
+
 ```
 1. Buka MySQL Workbench
 2. File → Open SQL Script
@@ -32,6 +37,7 @@ cd "d:\Developments\Tech\React\React-Projects\pengaduan-sarpras\server\database"
 ```
 
 **Metode B: Command Line**
+
 ```bash
 cd "d:\Developments\Tech\React\React-Projects\pengaduan-sarpras\server"
 mysql -u root -p pengaduan_sarpras < database/reset_and_populate_demo_data.sql
@@ -55,13 +61,14 @@ npm run dev
 
 **Buka browser:** http://localhost:5173
 
-| Username | Password | Role |
-|----------|----------|------|
-| `admin` | `password123` | Admin |
-| `siswa1` | `password123` | Pengguna |
-| `petugas1` | `password123` | Petugas |
+| Username   | Password      | Role     |
+| ---------- | ------------- | -------- |
+| `admin`    | `password123` | Admin    |
+| `siswa1`   | `password123` | Pengguna |
+| `petugas1` | `password123` | Petugas  |
 
 **Test:**
+
 - ✅ Login berhasil
 - ✅ Dashboard muncul
 - ✅ Ada data pengaduan (7 pengaduan)
@@ -80,6 +87,7 @@ Atau: F12 → Application → Clear Storage → Clear site data
 ## ✅ VERIFIKASI BERHASIL
 
 **Jalankan query ini di MySQL Workbench:**
+
 ```sql
 USE pengaduan_sarpras;
 
@@ -89,6 +97,7 @@ SELECT 'PENGADUAN', COUNT(*) FROM pengaduan_sarpras_pengaduan;
 ```
 
 **Expected Result:**
+
 ```
 Tabel       | Jumlah
 ------------|-------
@@ -103,17 +112,20 @@ PENGADUAN   | 7
 ## 📊 DATA YANG TERSEDIA
 
 ### **8 User:**
+
 - 1 Admin: `admin`
 - 3 Petugas: `petugas1`, `petugas2`, `petugas3`
 - 4 Pengguna: `siswa1`, `siswa2`, `guru1`, `guru2`
 
 ### **7 Pengaduan:**
+
 - ✅ 2 Selesai: AC Lab, Kursi Patah
 - 🔄 2 Diproses: Proyektor, Keyboard
 - ⏳ 2 Menunggu: Toilet, Ring Basket
 - ❌ 1 Ditolak: Request Komputer Baru
 
 ### **18 Lokasi:**
+
 - 4 Ruang Kelas (X RPL 1, X RPL 2, XI RPL 1, XII RPL 1)
 - 4 Laboratorium (Lab Komputer 1, 2, Lab Jaringan, Lab Multimedia)
 - 2 Ruang Guru
@@ -124,6 +136,7 @@ PENGADUAN   | 7
 - 2 Toilet
 
 ### **25 Item Sarana Prasarana:**
+
 - Komputer, Monitor, Keyboard, Mouse
 - AC, Proyektor, Kipas Angin
 - Meja Siswa, Kursi Siswa
@@ -136,6 +149,7 @@ PENGADUAN   | 7
 ## 🎭 SKENARIO DEMO PRESENTASI
 
 ### **DEMO 1: Buat Pengaduan (Siswa)**
+
 ```
 1. Login: siswa1 / password123
 2. Klik "Tambah Pengaduan"
@@ -149,6 +163,7 @@ PENGADUAN   | 7
 ```
 
 ### **DEMO 2: Review Pengaduan (Admin)**
+
 ```
 1. Login: admin / password123
 2. Lihat notifikasi: "📋 Pengaduan Baru Masuk"
@@ -160,6 +175,7 @@ PENGADUAN   | 7
 ```
 
 ### **DEMO 3: Tangani Pengaduan (Petugas)**
+
 ```
 1. Login: petugas1 / password123
 2. Lihat notifikasi: "🔧 Tugas Baru"
@@ -171,6 +187,7 @@ PENGADUAN   | 7
 ```
 
 ### **DEMO 4: Cek Status (Siswa)**
+
 ```
 1. Login kembali: siswa1 / password123
 2. Lihat notifikasi: "✅ Pengaduan Selesai"
@@ -184,6 +201,7 @@ PENGADUAN   | 7
 ## ❌ TROUBLESHOOTING CEPAT
 
 ### **Login gagal**
+
 ```bash
 # Restart backend
 pm2 restart pengaduan-backend
@@ -193,6 +211,7 @@ Ctrl + Shift + R
 ```
 
 ### **Notifikasi tidak muncul**
+
 ```
 1. Allow notification di browser
 2. Cek console (F12) → Error Firebase?
@@ -200,6 +219,7 @@ Ctrl + Shift + R
 ```
 
 ### **Database error**
+
 ```bash
 # Cek MySQL running
 services.msc → MySQL → Start
@@ -209,6 +229,7 @@ mysql -u root -p
 ```
 
 ### **Mau kembali ke data lama**
+
 ```powershell
 cd server/database
 .\restore_database.ps1
@@ -218,12 +239,12 @@ cd server/database
 
 ## 📚 DOKUMENTASI LENGKAP
 
-| File | Deskripsi |
-|------|-----------|
-| 📖 `PANDUAN_RESET_DATA_UKK.md` | Panduan lengkap step-by-step |
-| 🎯 `QUICK_REFERENCE_UKK.md` | Cheat sheet presentasi |
-| 📊 `DOKUMENTASI_BACKEND_UKK.md` | Dokumentasi backend lengkap |
-| 📁 `README.md` | Overview semua script database |
+| File                            | Deskripsi                      |
+| ------------------------------- | ------------------------------ |
+| 📖 `PANDUAN_RESET_DATA_UKK.md`  | Panduan lengkap step-by-step   |
+| 🎯 `QUICK_REFERENCE_UKK.md`     | Cheat sheet presentasi         |
+| 📊 `DOKUMENTASI_BACKEND_UKK.md` | Dokumentasi backend lengkap    |
+| 📁 `README.md`                  | Overview semua script database |
 
 ---
 
