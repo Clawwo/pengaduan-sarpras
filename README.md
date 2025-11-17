@@ -19,6 +19,7 @@ Aplikasi web dan mobile untuk mengelola pengaduan sarana dan prasarana sekolah/i
 ## 🚀 Tech Stack
 
 ### Backend
+
 - Node.js 20+ with Express
 - MySQL 8.2+ dengan stored procedures
 - JWT Authentication
@@ -26,6 +27,7 @@ Aplikasi web dan mobile untuk mengelola pengaduan sarana dan prasarana sekolah/i
 - Firebase Admin untuk push notifications
 
 ### Frontend Web
+
 - React 19.1
 - Vite 7.1
 - TailwindCSS 4
@@ -34,6 +36,7 @@ Aplikasi web dan mobile untuk mengelola pengaduan sarana dan prasarana sekolah/i
 - Axios untuk API calls
 
 ### Mobile App
+
 - React Native (Expo)
 - Expo Router untuk navigasi
 - Firebase Cloud Messaging
@@ -72,17 +75,20 @@ pengaduan-sarpras/
 ## 🔧 Development Setup
 
 ### Prerequisites
+
 - Node.js 20+
 - MySQL 8.2+
 - npm or yarn
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/Clawwo/pengaduan-sarpras.git
 cd pengaduan-sarpras
 ```
 
 ### 2. Setup Database
+
 ```bash
 # Login to MySQL
 mysql -u root -p
@@ -96,6 +102,7 @@ mysql -u root -p pengaduan_sarpras < server/database/add_columns.sql
 ```
 
 ### 3. Setup Backend
+
 ```bash
 cd server
 npm install
@@ -111,6 +118,7 @@ npm run dev
 Backend will run on `http://localhost:5000`
 
 ### 4. Setup Frontend Web
+
 ```bash
 cd clients/web
 npm install
@@ -125,6 +133,7 @@ npm run dev
 Frontend will run on `http://localhost:5173`
 
 ### 5. Setup Mobile App (Optional)
+
 ```bash
 cd clients/mobile
 npm install
@@ -171,6 +180,7 @@ chmod +x deploy.sh
 ## 📚 API Documentation
 
 ### Authentication
+
 ```
 POST /api/auth/register    # Register new user
 POST /api/auth/login       # Login user
@@ -178,6 +188,7 @@ GET  /api/auth/me          # Get current user
 ```
 
 ### Pengaduan
+
 ```
 GET    /api/pengaduan             # Get all pengaduan
 GET    /api/pengaduan/:id         # Get pengaduan by ID
@@ -188,6 +199,7 @@ PATCH  /api/pengaduan/:id/status  # Update status
 ```
 
 ### Locations
+
 ```
 GET  /api/lokasi        # Get all locations
 POST /api/lokasi        # Create location
@@ -195,6 +207,7 @@ PUT  /api/lokasi/:id    # Update location
 ```
 
 ### Admin/Petugas Management
+
 ```
 GET    /api/petugas           # Get all petugas
 POST   /api/petugas           # Create petugas
@@ -205,6 +218,7 @@ DELETE /api/petugas/:id       # Delete petugas
 ## 🔐 Environment Variables
 
 ### Backend (.env)
+
 ```env
 NODE_ENV=production
 PORT=5000
@@ -226,6 +240,7 @@ IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_id
 ```
 
 ### Frontend (.env.production)
+
 ```env
 VITE_API_URL=https://your-domain.com
 ```
@@ -233,6 +248,7 @@ VITE_API_URL=https://your-domain.com
 ## 🚀 Production Deployment
 
 ### Fresh VPS Setup (Ubuntu 22.04)
+
 ```bash
 # 1. Run automated setup script
 wget https://raw.githubusercontent.com/YOUR_REPO/pengaduan-sarpras/main/fresh-setup-vps.sh
@@ -244,7 +260,9 @@ sudo ./fresh-setup-vps.sh
 ```
 
 ### Quick Deploy Command Reference
+
 See [QUICK_COMMANDS.md](./QUICK_COMMANDS.md) for:
+
 - Daily commands (status, logs, restart)
 - Debugging guides
 - Database backup/restore
@@ -254,6 +272,7 @@ See [QUICK_COMMANDS.md](./QUICK_COMMANDS.md) for:
 ## 🛠️ Useful Commands
 
 ### Development
+
 ```bash
 # Backend
 cd server
@@ -267,6 +286,7 @@ npm run preview      # Preview production build
 ```
 
 ### Production
+
 ```bash
 # Status checks
 pm2 status                    # Check PM2 processes
@@ -288,6 +308,7 @@ mysqldump -u clawwo -p pengaduan_sarpras > backup-$(date +%Y%m%d).sql
 ## 🐛 Troubleshooting
 
 ### Backend 500 Error
+
 ```bash
 # Check logs first
 pm2 logs pengaduan-backend --lines 100
@@ -305,6 +326,7 @@ curl http://localhost:5000/api/health
 ```
 
 ### CORS Errors
+
 ```bash
 # Check ORIGIN matches frontend URL
 grep ORIGIN /var/www/pengaduan-sarpras/server/.env
@@ -316,6 +338,7 @@ pm2 restart pengaduan-backend
 ```
 
 ### Frontend Not Loading
+
 ```bash
 # Check files exist
 ls -la /var/www/pengaduan-sarpras-web/
@@ -331,6 +354,7 @@ sudo systemctl restart nginx
 ```
 
 ### Complete Reset (Last Resort)
+
 ```bash
 # See FRESH_START_GUIDE.md section "Clean Up Old Files"
 # Or run fresh-setup-vps.sh again
@@ -355,6 +379,7 @@ Developed by Clawwo
 ## 📞 Support
 
 For issues and questions:
+
 - Create an issue on GitHub
 - Check [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for deployment help
 

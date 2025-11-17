@@ -37,7 +37,7 @@ export const getKategoriLokasiById = async (req, res) => {
       data,
     });
   } catch (error) {
-    console.error("Error getting kategori lokasi by id:", error);
+    console.error("Error mengambil data kategori lokasi:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Gagal mengambil data kategori lokasi",
@@ -56,7 +56,7 @@ export const getLokasiByKategori = async (req, res) => {
       count: data.length,
     });
   } catch (error) {
-    console.error("Error getting lokasi by kategori:", error);
+    console.error("Error mengambil data lokasi berdasarkan kategori:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Gagal mengambil data lokasi",
