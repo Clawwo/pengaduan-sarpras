@@ -14,7 +14,7 @@ CREATE PROCEDURE sp_update_pengaduan_status(
   OUT p_status_code INT,
   OUT p_message VARCHAR(255)
 )
-proc_block: BEGIN
+BEGIN  -- ✅ TANPA LABEL
   DECLARE v_exists INT DEFAULT 0;
 
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -22,7 +22,6 @@ proc_block: BEGIN
     SET p_status_code = 500;
     SET p_message = 'Terjadi kesalahan database';
     ROLLBACK;
-    LEAVE proc_block;
   END;
 
   START TRANSACTION;
@@ -35,23 +34,23 @@ proc_block: BEGIN
     SET p_status_code = 404;
     SET p_message = 'Pengaduan tidak ditemukan';
     ROLLBACK;
-    LEAVE proc_block;
+  ELSE
+    UPDATE pengaduan_sarpras_pengaduan
+    SET 
+        status = p_status,
+        saran_petugas = p_saran_petugas,
+        id_petugas = p_id_petugas,
+        tgl_selesai = IF(p_status IN ('Selesai', 'Ditolak'), NOW(), NULL),
+        gambar_bukti_selesai = p_gambar_bukti_selesai,
+        file_id_bukti_selesai = p_file_id_bukti_selesai,
+        updated_at = NOW()
+    WHERE id_pengaduan = p_id_pengaduan;
+
+    SET p_status_code = 200;
+    SET p_message = 'Status pengaduan berhasil diperbarui';
+    COMMIT;
   END IF;
 
-  UPDATE pengaduan_sarpras_pengaduan
-  SET 
-      status = p_status,
-      saran_petugas = p_saran_petugas,
-      id_petugas = p_id_petugas,
-      tgl_selesai = IF(p_status IN ('Selesai', 'Ditolak'), NOW(), NULL),
-      gambar_bukti_selesai = p_gambar_bukti_selesai,
-      file_id_bukti_selesai = p_file_id_bukti_selesai,
-      updated_at = NOW()
-  WHERE id_pengaduan = p_id_pengaduan;
+END$$
 
-  SET p_status_code = 200;
-  SET p_message = 'Status pengaduan berhasil diperbarui';
-  COMMIT;
-
-END proc_block$$
 DELIMITER ;
