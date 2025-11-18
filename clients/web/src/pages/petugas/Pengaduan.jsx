@@ -200,15 +200,18 @@ const Pengaduan = () => {
   const submitManage = async (e) => {
     e?.preventDefault?.();
     if (!current) return;
-    
+
     // Cek jika status Selesai atau Ditolak, tampilkan konfirmasi
     let backendStatus = status;
     if (status === "Disetujui") backendStatus = "Disetujui";
     else if (status === "Diproses") backendStatus = "Diproses";
     else if (status === "Selesai") backendStatus = "Selesai";
     else if (status === "Ditolak") backendStatus = "Ditolak";
-    
-    if ((backendStatus === "Selesai" || backendStatus === "Ditolak") && !showConfirmDialog) {
+
+    if (
+      (backendStatus === "Selesai" || backendStatus === "Ditolak") &&
+      !showConfirmDialog
+    ) {
       setPendingStatus(backendStatus);
       setShowConfirmDialog(true);
       return;
@@ -639,15 +642,19 @@ const Pengaduan = () => {
                 <label className="block text-sm text-neutral-300 mb-1.5">
                   Status
                 </label>
-                <Select 
-                  value={status || ""} 
+                <Select
+                  value={status || ""}
                   onValueChange={setStatus}
-                  disabled={current?.status === "Selesai" || current?.status === "Ditolak"}
+                  disabled={
+                    current?.status === "Selesai" ||
+                    current?.status === "Ditolak"
+                  }
                 >
                   <SelectTrigger
                     className={`w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 focus-visible:border-orange-500 focus-visible:ring-0 ${
-                      (current?.status === "Selesai" || current?.status === "Ditolak") 
-                        ? "opacity-60 cursor-not-allowed" 
+                      current?.status === "Selesai" ||
+                      current?.status === "Ditolak"
+                        ? "opacity-60 cursor-not-allowed"
                         : ""
                     }`}
                   >
@@ -683,14 +690,16 @@ const Pengaduan = () => {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                {(current?.status === "Selesai" || current?.status === "Ditolak") ? (
+                {current?.status === "Selesai" ||
+                current?.status === "Ditolak" ? (
                   <p className="mt-1.5 text-xs text-amber-400">
-                    ⚠️ Pengaduan sudah {current?.status}. Status tidak dapat diubah lagi.
+                    ⚠️ Pengaduan sudah {current?.status}. Status tidak dapat
+                    diubah lagi.
                   </p>
                 ) : (
                   <p className="mt-1.5 text-xs text-neutral-500">
-                    Pilih status sesuai progres pengaduan. "Disetujui" = diterima
-                    untuk diproses.
+                    Pilih status sesuai progres pengaduan. "Disetujui" =
+                    diterima untuk diproses.
                   </p>
                 )}
               </div>
@@ -702,9 +711,13 @@ const Pengaduan = () => {
                   value={saran}
                   onChange={(e) => setSaran(e.target.value)}
                   rows={5}
-                  disabled={current?.status === "Selesai" || current?.status === "Ditolak"}
+                  disabled={
+                    current?.status === "Selesai" ||
+                    current?.status === "Ditolak"
+                  }
                   className={`w-full rounded-md bg-neutral-900/60 border border-neutral-800 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 px-3 py-2.5 resize-y text-[13.5px] ${
-                    (current?.status === "Selesai" || current?.status === "Ditolak")
+                    current?.status === "Selesai" ||
+                    current?.status === "Ditolak"
                       ? "opacity-60 cursor-not-allowed"
                       : ""
                   }`}
@@ -765,7 +778,11 @@ const Pengaduan = () => {
               <div className="flex flex-col gap-2">
                 <button
                   type="submit"
-                  disabled={saving || current?.status === "Selesai" || current?.status === "Ditolak"}
+                  disabled={
+                    saving ||
+                    current?.status === "Selesai" ||
+                    current?.status === "Ditolak"
+                  }
                   className="w-full px-3.5 py-2.5 text-sm rounded-md bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed font-medium"
                 >
                   {saving ? "Menyimpan..." : "Simpan Perubahan"}
@@ -906,7 +923,11 @@ const Pengaduan = () => {
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold flex items-center gap-2">
               <svg
-                className={`size-6 ${pendingStatus === "Selesai" ? "text-green-500" : "text-red-500"}`}
+                className={`size-6 ${
+                  pendingStatus === "Selesai"
+                    ? "text-green-500"
+                    : "text-red-500"
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -922,17 +943,21 @@ const Pengaduan = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <div className={`p-4 rounded-lg border ${
-              pendingStatus === "Selesai" 
-                ? "bg-green-500/10 border-green-500/30" 
-                : "bg-red-500/10 border-red-500/30"
-            }`}>
+            <div
+              className={`p-4 rounded-lg border ${
+                pendingStatus === "Selesai"
+                  ? "bg-green-500/10 border-green-500/30"
+                  : "bg-red-500/10 border-red-500/30"
+              }`}
+            >
               <p className="text-sm text-neutral-200 leading-relaxed mb-3">
-                Anda akan mengubah status pengaduan menjadi <span className="font-bold">{pendingStatus}</span>.
+                Anda akan mengubah status pengaduan menjadi{" "}
+                <span className="font-bold">{pendingStatus}</span>.
               </p>
               <p className="text-sm text-neutral-300 leading-relaxed">
-                ⚠️ <strong>Perhatian:</strong> Setelah status diubah menjadi <strong>{pendingStatus}</strong>, 
-                pengaduan tidak dapat diubah lagi dan akan menjadi <strong>final</strong>.
+                ⚠️ <strong>Perhatian:</strong> Setelah status diubah menjadi{" "}
+                <strong>{pendingStatus}</strong>, pengaduan tidak dapat diubah
+                lagi dan akan menjadi <strong>final</strong>.
               </p>
             </div>
             <p className="mt-4 text-sm text-neutral-400">
@@ -955,9 +980,12 @@ const Pengaduan = () => {
               onClick={() => {
                 setShowConfirmDialog(false);
                 // Trigger submit lagi dengan konfirmasi sudah aktif
-                const form = document.querySelector('form');
+                const form = document.querySelector("form");
                 if (form) {
-                  const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                  const submitEvent = new Event("submit", {
+                    bubbles: true,
+                    cancelable: true,
+                  });
                   form.dispatchEvent(submitEvent);
                 }
               }}
