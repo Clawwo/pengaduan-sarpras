@@ -1,5 +1,6 @@
 import pool from "../config/dbConfig.js";
 
+// mendapatkan semua kategori lokasi beserta jumlah lokasi di masing-masing kategori
 export const getAllKategoriLokasi = async () => {
   const [rows] = await pool.query(`
     SELECT k.*, COUNT(l.id_lokasi) as jumlah_lokasi
@@ -11,6 +12,7 @@ export const getAllKategoriLokasi = async () => {
   return rows;
 };
 
+// mendapatkan kategori lokasi berdasarkan id
 export const getKategoriLokasiById = async (id) => {
   const [rows] = await pool.query(
     `SELECT k.*, COUNT(l.id_lokasi) as jumlah_lokasi
@@ -23,6 +25,7 @@ export const getKategoriLokasiById = async (id) => {
   return rows[0];
 };
 
+// mendapatkan lokasi berdasarkan kategori
 export const getLokasiByKategori = async (id_kategori) => {
   const [rows] = await pool.query(
     `SELECT l.*, COUNT(DISTINCT i.id_item) as jumlah_item

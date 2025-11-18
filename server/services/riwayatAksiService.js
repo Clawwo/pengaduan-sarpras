@@ -1,17 +1,6 @@
 import pool from "../config/dbConfig.js";
 
-/**
- * Mencatat riwayat aksi petugas/admin terhadap pengaduan
- * @param {Object} data - Data riwayat aksi
- * @param {number} data.id_pengaduan - ID pengaduan
- * @param {number|null} data.id_petugas - ID petugas (null jika admin)
- * @param {number} data.id_user - ID user yang melakukan aksi
- * @param {string} data.role_user - Role user ('petugas' atau 'admin')
- * @param {string} data.aksi - Deskripsi aksi yang dilakukan
- * @param {string|null} data.status_sebelumnya - Status sebelum diubah
- * @param {string} data.status_baru - Status setelah diubah
- * @param {string|null} data.saran_petugas - Saran dari petugas
- */
+// membuat riwayat aksi baru
 export const createRiwayatAksi = async (data) => {
   const {
     id_pengaduan,
@@ -47,17 +36,7 @@ export const createRiwayatAksi = async (data) => {
   }
 };
 
-/**
- * Mendapatkan semua riwayat aksi dengan filter (untuk admin)
- * @param {Object} filters - Filter options
- * @param {number} filters.id_petugas - Filter by petugas
- * @param {string} filters.startDate - Filter tanggal mulai
- * @param {string} filters.endDate - Filter tanggal akhir
- * @param {string} filters.status - Filter by status
- * @param {string} filters.search - Search keyword
- * @param {number} filters.page - Halaman (default: 1)
- * @param {number} filters.limit - Jumlah per halaman (default: 20)
- */
+// mendapatkan semua riwayat aksi dengan filter dan pagination
 export const getAllRiwayatAksi = async (filters = {}) => {
   const {
     id_petugas,
@@ -91,13 +70,13 @@ export const getAllRiwayatAksi = async (filters = {}) => {
 
   const params = [];
 
-  // Filter by petugas
+  // Filter petugas
   if (id_petugas) {
     query += " AND r.id_petugas = ?";
     params.push(id_petugas);
   }
 
-  // Filter by date range
+  // Filter jarak tanggal
   if (startDate) {
     query += " AND DATE(r.created_at) >= ?";
     params.push(startDate);
@@ -107,13 +86,13 @@ export const getAllRiwayatAksi = async (filters = {}) => {
     params.push(endDate);
   }
 
-  // Filter by status baru
+  // Filter status baru
   if (status) {
     query += " AND r.status_baru = ?";
     params.push(status);
   }
 
-  // Search in nama pengaduan, nama petugas, atau aksi
+  // Search nama pengaduan, nama petugas, atau aksi
   if (search) {
     query += ` AND (
       p.nama_pengaduan LIKE ? OR 
@@ -136,7 +115,7 @@ export const getAllRiwayatAksi = async (filters = {}) => {
   const [countResult] = await pool.query(countQuery, params);
   const total = countResult[0]?.total || 0;
 
-  // Pagination
+  // Bagian Pagination
   const offset = (page - 1) * limit;
   query += " LIMIT ? OFFSET ?";
   params.push(limit, offset);
@@ -154,10 +133,7 @@ export const getAllRiwayatAksi = async (filters = {}) => {
   };
 };
 
-/**
- * Mendapatkan riwayat aksi untuk satu pengaduan tertentu
- * @param {number} id_pengaduan - ID pengaduan
- */
+// mendapatkan riwayat aksi untuk satu pengaduan tertentu
 export const getRiwayatAksiByPengaduan = async (id_pengaduan) => {
   const [rows] = await pool.query(
     `SELECT 
@@ -175,9 +151,7 @@ export const getRiwayatAksiByPengaduan = async (id_pengaduan) => {
   return rows;
 };
 
-/**
- * Mendapatkan statistik riwayat aksi
- */
+// mendapatkan statistik riwayat aksi
 export const getRiwayatAksiStatistics = async () => {
   const [stats] = await pool.query(`
     SELECT 

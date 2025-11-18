@@ -1,5 +1,6 @@
 import pool from "../config/dbConfig.js";
 
+// mendapatkan semua list lokasi
 export const getAllListLokasi = async () => {
   const [rows] = await pool.query(`
     SELECT ll.id_list, l.nama_lokasi, i.nama_item
@@ -10,6 +11,7 @@ export const getAllListLokasi = async () => {
   return rows;
 };
 
+// mendapatkan list lokasi berdasarkan id
 export const getListLokasiById = async (id) => {
   const [rows] = await pool.query(
     `SELECT ll.id_list, l.nama_lokasi, i.nama_item
@@ -22,6 +24,7 @@ export const getListLokasiById = async (id) => {
   return rows[0];
 };
 
+// menambahkan list lokasi baru
 export const createListLokasi = async (id_lokasi, id_item) => {
   const [result] = await pool.query(
     "INSERT INTO pengaduan_sarpras_list_lokasi (id_lokasi, id_item) VALUES (?, ?)",
@@ -30,6 +33,7 @@ export const createListLokasi = async (id_lokasi, id_item) => {
   return result.insertId;
 };
 
+// memperbarui list lokasi
 export const updateListLokasi = async (id, id_lokasi, id_item) => {
   const [result] = await pool.query(
     "UPDATE pengaduan_sarpras_list_lokasi SET id_lokasi = ?, id_item = ? WHERE id_list = ?",
@@ -38,6 +42,7 @@ export const updateListLokasi = async (id, id_lokasi, id_item) => {
   return result.affectedRows;
 };
 
+// menghapus list lokasi
 export const deleteListLokasi = async (id) => {
   const [result] = await pool.query(
     "DELETE FROM pengaduan_sarpras_list_lokasi WHERE id_list = ?",

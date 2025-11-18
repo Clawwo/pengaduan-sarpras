@@ -36,6 +36,7 @@ export const getPengaduanReport = async ({
 };
 import pool from "../config/dbConfig.js";
 
+// membuat pengaduan baru
 export const createPengaduan = async (data) => {
   const {
     nama_pengaduan,
@@ -60,9 +61,8 @@ export const createPengaduan = async (data) => {
       id_temporary,
     });
 
-    // First, let's check if we can get MySQL warnings/errors
     try {
-      // Call stored procedure with OUT parameters
+      // Memaggil SP
       const [result] = await pool.query(
         "CALL sp_create_pengaduan(?, ?, ?, ?, ?, ?, ?, ?, @new_id, @status_code, @message)",
         [
@@ -79,13 +79,13 @@ export const createPengaduan = async (data) => {
 
       console.log("✅ Stored procedure executed, result:", result);
 
-      // Check for MySQL warnings
+      // Cek peringatan MySQL
       const [warnings] = await pool.query("SHOW WARNINGS");
       if (warnings.length > 0) {
         console.log("⚠️ MySQL Warnings:", warnings);
       }
 
-      // Get OUT parameters
+      // Get OUT parameter
       const [outParams] = await pool.query(
         "SELECT @new_id as newId, @status_code as statusCode, @message as message"
       );
@@ -120,6 +120,7 @@ export const createPengaduan = async (data) => {
   }
 };
 
+// mendapatkan semua pengaduan
 export const getAllPengaduan = async () => {
   const [rows] = await pool.query(
     `SELECT p.*, u.nama_pengguna, l.nama_lokasi, COALESCE(i.nama_item, ti.nama_barang_baru) AS nama_item, pt.nama as nama_petugas
@@ -134,6 +135,7 @@ export const getAllPengaduan = async () => {
   return rows;
 };
 
+// mendapatkan pengaduan berdasarkan user
 export const getPengaduanByUser = async (id_user) => {
   const [rows] = await pool.query(
     `SELECT p.*, l.nama_lokasi, COALESCE(i.nama_item, ti.nama_barang_baru) AS nama_item 
@@ -148,6 +150,7 @@ export const getPengaduanByUser = async (id_user) => {
   return rows;
 };
 
+// mendapatkan pengaduan berdasarkan id
 export const getPengaduanById = async (id_pengaduan) => {
   const [rows] = await pool.query(
     "SELECT * FROM pengaduan_sarpras_pengaduan WHERE id_pengaduan = ?",
@@ -163,20 +166,20 @@ export const updatePengaduanStatus = async (
   id_petugas,
   tgl_selesai
 ) => {
-  // Call stored procedure with OUT parameters
+  // Memanggil SP untuk update status pengaduan
   const [result] = await pool.query(
     "CALL sp_update_pengaduan_status(?, ?, ?, ?, ?, @status_code, @message)",
     [id_pengaduan, status, saran_petugas || null, id_petugas, tgl_selesai]
   );
 
-  // Get OUT parameters
+  // Get OUT parameter
   const [outParams] = await pool.query(
     "SELECT @status_code as statusCode, @message as message"
   );
 
   const { statusCode, message } = outParams[0];
 
-  // Handle errors based on status code
+  // Menangani Error dengan debug
   if (statusCode === 404) {
     throw new Error(message || "Pengaduan tidak ditemukan");
   } else if (statusCode === 500) {

@@ -28,7 +28,7 @@ export const updateProfile = async (
   id_user,
   { nama_pengguna, username, password }
 ) => {
-  // Check if username already exists (excluding current user)
+  // Mengecek jika username sudah ada
   if (username) {
     const [existing] = await pool.query(
       "SELECT id_user FROM pengaduan_sarpras_user WHERE username = ? AND id_user != ?",

@@ -1,5 +1,6 @@
 import pool from "../config/dbConfig.js";
 
+// mendapatkan semua item, dengan opsi filter berdasarkan id_lokasi
 export const getAllItems = async (id_lokasi = null) => {
   let query = `
     SELECT i.id_item, i.nama_item, i.deskripsi, i.foto, i.file_id, i.id_lokasi, l.nama_lokasi
@@ -20,6 +21,7 @@ export const getAllItems = async (id_lokasi = null) => {
   return rows;
 };
 
+// mendapatkan item berdasarkan id
 export const getItemById = async (id) => {
   const [rows] = await pool.query(
     `SELECT i.id_item, i.nama_item, i.deskripsi, i.foto, i.file_id, i.id_lokasi, l.nama_lokasi
@@ -31,6 +33,7 @@ export const getItemById = async (id) => {
   return rows[0];
 };
 
+// menambahkan item baru
 export const createItem = async (
   nama_item,
   deskripsi,
@@ -45,6 +48,7 @@ export const createItem = async (
   return result.insertId;
 };
 
+// memperbarui data item
 export const updateItem = async (
   id,
   nama_item,
@@ -61,6 +65,7 @@ export const updateItem = async (
   );
 };
 
+// menghapus item
 export const deleteItem = async (id) => {
   const [result] = await pool.query(
     "DELETE FROM pengaduan_sarpras_items WHERE id_item = ?",
@@ -69,6 +74,7 @@ export const deleteItem = async (id) => {
   return result.affectedRows;
 };
 
+// mendapatkan file_id item berdasarkan id
 export const getItemFileId = async (id) => {
   const [items] = await pool.query(
     "SELECT file_id FROM pengaduan_sarpras_items WHERE id_item = ?",

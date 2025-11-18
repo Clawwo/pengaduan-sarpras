@@ -1,5 +1,6 @@
 import pool from "../config/dbConfig.js";
 
+// mendapatkan semua petugas
 export const getPetugas = async () => {
   const [rows] = await pool.query(`
     SELECT p.id_petugas, u.id_user, u.username, u.nama_pengguna, u.role, 
@@ -10,6 +11,7 @@ export const getPetugas = async () => {
   return rows;
 };
 
+// mendapatkan petugas berdasarkan id
 export const getPetugasById = async (id) => {
   const [rows] = await pool.query(
     `
@@ -23,6 +25,7 @@ export const getPetugasById = async (id) => {
   return rows[0];
 };
 
+// menghapus petugas beserta usernya
 export const deletePetugas = async (id) => {
   const [rows] = await pool.query(
     "SELECT id_user FROM pengaduan_sarpras_petugas WHERE id_petugas = ?",

@@ -1,5 +1,6 @@
 import pool from "../config/dbConfig.js";
 
+// mendapatkan semua lokasi beserta nama kategorinya
 export const getAllLokasi = async () => {
   const [rows] = await pool.query(`
     SELECT l.*, k.nama_kategori 
@@ -10,6 +11,7 @@ export const getAllLokasi = async () => {
   return rows;
 };
 
+// mendapatkan lokasi berdasarkan id
 export const getLokasiById = async (id) => {
   const [rows] = await pool.query(
     `SELECT l.*, k.nama_kategori 
@@ -21,19 +23,25 @@ export const getLokasiById = async (id) => {
   return rows[0];
 };
 
-export const checkDuplicateLokasiName = async (nama_lokasi, excludeId = null) => {
-  let query = "SELECT id_lokasi FROM pengaduan_sarpras_lokasi WHERE LOWER(TRIM(nama_lokasi)) = LOWER(TRIM(?))";
+// memeriksa duplikasi nama lokasi
+export const checkDuplicateLokasiName = async (
+  nama_lokasi,
+  excludeId = null
+) => {
+  let query =
+    "SELECT id_lokasi FROM pengaduan_sarpras_lokasi WHERE LOWER(TRIM(nama_lokasi)) = LOWER(TRIM(?))";
   const params = [nama_lokasi];
-  
+
   if (excludeId) {
     query += " AND id_lokasi != ?";
     params.push(excludeId);
   }
-  
+
   const [rows] = await pool.query(query, params);
   return rows.length > 0;
 };
 
+// menambahkan lokasi baru
 export const createLokasi = async (nama_lokasi, id_kategori) => {
   const [result] = await pool.query(
     "INSERT INTO pengaduan_sarpras_lokasi (nama_lokasi, id_kategori) VALUES (?, ?)",
@@ -42,6 +50,7 @@ export const createLokasi = async (nama_lokasi, id_kategori) => {
   return result.insertId;
 };
 
+// memperbarui data lokasi
 export const updateLokasi = async (id, nama_lokasi, id_kategori) => {
   const [result] = await pool.query(
     "UPDATE pengaduan_sarpras_lokasi SET nama_lokasi = ?, id_kategori = ? WHERE id_lokasi = ?",
@@ -50,6 +59,7 @@ export const updateLokasi = async (id, nama_lokasi, id_kategori) => {
   return result.affectedRows;
 };
 
+// menghapus lokasi
 export const deleteLokasi = async (id) => {
   const [result] = await pool.query(
     "DELETE FROM pengaduan_sarpras_lokasi WHERE id_lokasi = ?",
