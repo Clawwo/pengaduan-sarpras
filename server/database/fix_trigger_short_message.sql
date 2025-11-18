@@ -47,25 +47,51 @@ DELIMITER ;
 -- 2. TAMBAH KOLOM GAMBAR BUKTI SELESAI (CROSS VERSION SAFE)
 -- ======================================================
 
--- Tambah kolom gambar_bukti_selesai jika belum ada
-IF NOT EXISTS (
-    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_NAME = 'pengaduan_sarpras_pengaduan'
-    AND COLUMN_NAME = 'gambar_bukti_selesai'
-) THEN
-    ALTER TABLE pengaduan_sarpras_pengaduan
-        ADD COLUMN gambar_bukti_selesai TEXT NULL COMMENT 'URL bukti penyelesaian';
-END IF;
+-- Method 1: Menggunakan PROCEDURE untuk check column exists
+DELIMITER $$
 
--- Tambah kolom file_id_bukti_selesai jika belum ada
-IF NOT EXISTS (
-    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_NAME = 'pengaduan_sarpras_pengaduan'
-    AND COLUMN_NAME = 'file_id_bukti_selesai'
-) THEN
-    ALTER TABLE pengaduan_sarpras_pengaduan
-        ADD COLUMN file_id_bukti_selesai VARCHAR(255) NULL COMMENT 'File ID bukti penyelesaian';
-END IF;
+DROP PROCEDURE IF EXISTS AddColumnIfNotExists $$
+
+CREATE PROCEDURE AddColumnIfNotExists(
+    IN tableName VARCHAR(64),
+    IN columnName VARCHAR(64),
+    IN columnDefinition TEXT
+)
+BEGIN
+    DECLARE column_exists INT DEFAULT 0;
+    
+    SELECT COUNT(*)
+    INTO column_exists
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = tableName
+      AND COLUMN_NAME = columnName;
+    
+    IF column_exists = 0 THEN
+        SET @sql = CONCAT('ALTER TABLE ', tableName, ' ADD COLUMN ', columnName, ' ', columnDefinition);
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END $$
+
+DELIMITER ;
+
+-- Tambah kolom menggunakan procedure
+CALL AddColumnIfNotExists(
+    'pengaduan_sarpras_pengaduan', 
+    'gambar_bukti_selesai', 
+    'TEXT NULL COMMENT ''URL bukti penyelesaian'''
+);
+
+CALL AddColumnIfNotExists(
+    'pengaduan_sarpras_pengaduan', 
+    'file_id_bukti_selesai', 
+    'VARCHAR(255) NULL COMMENT ''File ID bukti penyelesaian'''
+);
+
+-- Hapus procedure setelah digunakan
+DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
 
 -- ======================================================
 -- DONE
