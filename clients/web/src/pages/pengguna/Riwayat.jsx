@@ -621,16 +621,6 @@ const Riwayat = () => {
                   </div>
                   <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
                     <div className="flex items-center gap-3">
-                      <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-green-500/60 bg-neutral-950 flex-shrink-0">
-                        <img
-                          src={selectedPengaduan.gambar_bukti_selesai}
-                          alt="Bukti Penyelesaian"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = "/placeholder-image.png";
-                          }}
-                        />
-                      </div>
                       <button
                         onClick={() => {
                           setZoomedImage({
@@ -639,7 +629,7 @@ const Riwayat = () => {
                           });
                           setImageZoomOpen(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition-colors shadow-lg hover:shadow-green-500/25"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition-colors"
                       >
                         <svg
                           className="size-5"
