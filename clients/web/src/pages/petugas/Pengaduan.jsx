@@ -133,6 +133,8 @@ const Pengaduan = () => {
   const [status, setStatus] = useState("");
   const [saran, setSaran] = useState("");
   const [saving, setSaving] = useState(false);
+  const [buktiFoto, setBuktiFoto] = useState(null); // File gambar bukti
+  const [buktiFotoPreview, setBuktiFotoPreview] = useState(null); // Preview gambar
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState(new Set()); // empty = all
@@ -144,6 +146,8 @@ const Pengaduan = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState("");
 
   const fetchAll = useCallback(async () => {
     try {
@@ -185,6 +189,10 @@ const Pengaduan = () => {
     setCurrent(row);
     setStatus(""); // Start with empty to show placeholder
     setSaran(row?.saran_petugas || "");
+    setBuktiFoto(null);
+    setBuktiFotoPreview(null);
+    setShowConfirmDialog(false);
+    setPendingStatus("");
     setOpen(true);
   };
 
@@ -192,20 +200,49 @@ const Pengaduan = () => {
   const submitManage = async (e) => {
     e?.preventDefault?.();
     if (!current) return;
+    
+    // Cek jika status Selesai atau Ditolak, tampilkan konfirmasi
+    let backendStatus = status;
+    if (status === "Disetujui") backendStatus = "Disetujui";
+    else if (status === "Diproses") backendStatus = "Diproses";
+    else if (status === "Selesai") backendStatus = "Selesai";
+    else if (status === "Ditolak") backendStatus = "Ditolak";
+    
+    if ((backendStatus === "Selesai" || backendStatus === "Ditolak") && !showConfirmDialog) {
+      setPendingStatus(backendStatus);
+      setShowConfirmDialog(true);
+      return;
+    }
     try {
       setSaving(true);
       const token = localStorage.getItem("token");
-      // Map status to backend value
-      let backendStatus = status;
-      if (status === "Disetujui") backendStatus = "Disetujui";
-      else if (status === "Diproses") backendStatus = "Diproses";
-      else if (status === "Selesai") backendStatus = "Selesai";
-      else if (status === "Ditolak") backendStatus = "Ditolak";
-      await axios.patch(
-        `${apiUrl}/api/pengaduan/${current.id_pengaduan}/status`,
-        { status: backendStatus, saran_petugas: saran },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+
+      // Jika status Selesai dan ada gambar bukti, gunakan FormData
+      if (backendStatus === "Selesai" && buktiFoto) {
+        const formData = new FormData();
+        formData.append("status", backendStatus);
+        formData.append("saran_petugas", saran || "");
+        formData.append("gambar", buktiFoto);
+
+        await axios.patch(
+          `${apiUrl}/api/pengaduan/${current.id_pengaduan}/status`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+      } else {
+        // Tanpa gambar, kirim JSON biasa
+        await axios.patch(
+          `${apiUrl}/api/pengaduan/${current.id_pengaduan}/status`,
+          { status: backendStatus, saran_petugas: saran },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+
       toast.success("Status & feedback diperbarui");
       setAlerts((prev) => [
         ...prev,
@@ -217,6 +254,10 @@ const Pengaduan = () => {
         },
       ]);
       setOpen(false);
+      setBuktiFoto(null);
+      setBuktiFotoPreview(null);
+      setShowConfirmDialog(false);
+      setPendingStatus("");
       fetchAll();
     } catch (err) {
       const errMsg =
@@ -598,9 +639,17 @@ const Pengaduan = () => {
                 <label className="block text-sm text-neutral-300 mb-1.5">
                   Status
                 </label>
-                <Select value={status || ""} onValueChange={setStatus}>
+                <Select 
+                  value={status || ""} 
+                  onValueChange={setStatus}
+                  disabled={current?.status === "Selesai" || current?.status === "Ditolak"}
+                >
                   <SelectTrigger
-                    className={`w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 focus-visible:border-orange-500 focus-visible:ring-0`}
+                    className={`w-full bg-neutral-900/60 border-neutral-700 text-neutral-100 data-[placeholder]:text-neutral-500 focus-visible:border-orange-500 focus-visible:ring-0 ${
+                      (current?.status === "Selesai" || current?.status === "Ditolak") 
+                        ? "opacity-60 cursor-not-allowed" 
+                        : ""
+                    }`}
                   >
                     <SelectValue placeholder="Pilih status pengaduan" />
                   </SelectTrigger>
@@ -634,10 +683,16 @@ const Pengaduan = () => {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="mt-1.5 text-xs text-neutral-500">
-                  Pilih status sesuai progres pengaduan. "Disetujui" = diterima
-                  untuk diproses.
-                </p>
+                {(current?.status === "Selesai" || current?.status === "Ditolak") ? (
+                  <p className="mt-1.5 text-xs text-amber-400">
+                    ⚠️ Pengaduan sudah {current?.status}. Status tidak dapat diubah lagi.
+                  </p>
+                ) : (
+                  <p className="mt-1.5 text-xs text-neutral-500">
+                    Pilih status sesuai progres pengaduan. "Disetujui" = diterima
+                    untuk diproses.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm text-neutral-300 mb-1.5">
@@ -647,17 +702,71 @@ const Pengaduan = () => {
                   value={saran}
                   onChange={(e) => setSaran(e.target.value)}
                   rows={5}
-                  className="w-full rounded-md bg-neutral-900/60 border border-neutral-800 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 px-3 py-2.5 resize-y text-[13.5px]"
+                  disabled={current?.status === "Selesai" || current?.status === "Ditolak"}
+                  className={`w-full rounded-md bg-neutral-900/60 border border-neutral-800 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 px-3 py-2.5 resize-y text-[13.5px] ${
+                    (current?.status === "Selesai" || current?.status === "Ditolak")
+                      ? "opacity-60 cursor-not-allowed"
+                      : ""
+                  }`}
                   placeholder="Berikan saran untuk pengguna..."
                 />
               </div>
+
+              {/* Upload Gambar Bukti - Hanya muncul jika status Selesai */}
+              {status === "Selesai" && (
+                <div className="p-4 border rounded-lg border-neutral-700 bg-neutral-800/30">
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="size-4 text-orange-500" />
+                      Gambar Bukti Penyelesaian (opsional)
+                    </div>
+                  </label>
+                  <p className="mb-3 text-xs text-neutral-400">
+                    Upload foto bukti bahwa pengaduan telah selesai ditangani
+                  </p>
+
+                  {/* Preview gambar */}
+                  {buktiFotoPreview && (
+                    <div className="relative mb-3 group">
+                      <img
+                        src={buktiFotoPreview}
+                        alt="Preview bukti"
+                        className="w-full h-auto max-h-[200px] object-contain rounded-md border-2 border-neutral-700 bg-neutral-950/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBuktiFoto(null);
+                          setBuktiFotoPreview(null);
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-md hover:bg-red-600 text-white"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setBuktiFoto(file);
+                        setBuktiFotoPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="w-full text-sm text-neutral-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-orange-500 file:text-white hover:file:bg-orange-600 file:cursor-pointer cursor-pointer"
+                  />
+                </div>
+              )}
             </div>
             <div className="px-4 py-4 mt-auto border-t border-neutral-800 bg-neutral-900/60">
               <div className="flex flex-col gap-2">
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="w-full px-3.5 py-2.5 text-sm rounded-md bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60 font-medium"
+                  disabled={saving || current?.status === "Selesai" || current?.status === "Ditolak"}
+                  className="w-full px-3.5 py-2.5 text-sm rounded-md bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed font-medium"
                 >
                   {saving ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>
@@ -666,7 +775,7 @@ const Pengaduan = () => {
                     type="button"
                     className="w-full px-3.5 py-2.5 text-sm rounded-md border border-neutral-800 text-neutral-300 hover:bg-neutral-800"
                   >
-                    Batal
+                    Tutup
                   </button>
                 </SheetClose>
               </div>
@@ -787,6 +896,79 @@ const Pengaduan = () => {
                 Buka di tab baru
               </a>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Konfirmasi untuk Status Selesai/Ditolak */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="bg-neutral-900 border-neutral-800 text-neutral-100 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+              <svg
+                className={`size-6 ${pendingStatus === "Selesai" ? "text-green-500" : "text-red-500"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              Konfirmasi Perubahan Status
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className={`p-4 rounded-lg border ${
+              pendingStatus === "Selesai" 
+                ? "bg-green-500/10 border-green-500/30" 
+                : "bg-red-500/10 border-red-500/30"
+            }`}>
+              <p className="text-sm text-neutral-200 leading-relaxed mb-3">
+                Anda akan mengubah status pengaduan menjadi <span className="font-bold">{pendingStatus}</span>.
+              </p>
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                ⚠️ <strong>Perhatian:</strong> Setelah status diubah menjadi <strong>{pendingStatus}</strong>, 
+                pengaduan tidak dapat diubah lagi dan akan menjadi <strong>final</strong>.
+              </p>
+            </div>
+            <p className="mt-4 text-sm text-neutral-400">
+              Apakah Anda yakin ingin melanjutkan?
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowConfirmDialog(false);
+                setPendingStatus("");
+              }}
+              className="flex-1 px-4 py-2.5 text-sm rounded-lg border border-neutral-700 text-neutral-300 hover:bg-neutral-800 transition-colors"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowConfirmDialog(false);
+                // Trigger submit lagi dengan konfirmasi sudah aktif
+                const form = document.querySelector('form');
+                if (form) {
+                  const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                  form.dispatchEvent(submitEvent);
+                }
+              }}
+              className={`flex-1 px-4 py-2.5 text-sm rounded-lg text-white font-medium transition-colors ${
+                pendingStatus === "Selesai"
+                  ? "bg-green-500 hover:bg-green-600"
+                  : "bg-red-500 hover:bg-red-600"
+              }`}
+            >
+              Ya, Lanjutkan
+            </button>
           </div>
         </DialogContent>
       </Dialog>

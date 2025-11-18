@@ -194,12 +194,39 @@ export const updatePengaduanStatus = async (req, res) => {
       return res.status(404).json({ message: "Pengaduan tidak ditemukan" });
     }
     let tgl_selesai = null;
+    let gambar_bukti_url = null;
+    let gambar_bukti_fileId = null;
+
     if (["Selesai", "Ditolak"].includes(status)) {
       tgl_selesai = new Date();
+
+      // Upload gambar bukti selesai jika ada
+      if (status === "Selesai" && req.file) {
+        try {
+          const uploadResponse = await uploadImage(
+            req.file.buffer,
+            req.file.originalname,
+            "/Pengaduan_Sarpras/Bukti_Selesai"
+          );
+          gambar_bukti_url = uploadResponse.url;
+          gambar_bukti_fileId = uploadResponse.fileId;
+          console.log(
+            "✅ Gambar bukti selesai berhasil diupload:",
+            uploadResponse.url
+          );
+        } catch (err) {
+          console.error("⚠️ Gagal upload gambar bukti:", err.message);
+          return res
+            .status(500)
+            .json({ message: "Gagal upload gambar bukti penyelesaian" });
+        }
+      }
+
+      // Hapus foto pengaduan lama dari ImageKit
       if (oldData.file_id) {
         try {
           await deleteImage(oldData.file_id);
-          console.log("Foto dihapus dari ImageKit:", oldData.file_id);
+          console.log("Foto pengaduan dihapus dari ImageKit:", oldData.file_id);
         } catch (err) {
           console.error("Gagal hapus foto dari ImageKit:", err.message);
         }
@@ -223,7 +250,9 @@ export const updatePengaduanStatus = async (req, res) => {
       status,
       saran_petugas,
       id_petugas,
-      tgl_selesai
+      tgl_selesai,
+      gambar_bukti_url,
+      gambar_bukti_fileId
     );
 
     // 🔔 Kirim notifikasi ke user pemilik pengaduan dengan pesan yang jelas

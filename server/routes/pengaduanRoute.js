@@ -27,6 +27,7 @@ router.get("/", authMiddleware(["petugas", "admin"]), getAllPengaduan);
 router.patch(
   "/:id/status",
   authMiddleware(["petugas", "admin"]),
+  uploadImage("gambar"), // Support upload gambar bukti
   updatePengaduanStatus
 );
 

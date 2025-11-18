@@ -46,6 +46,10 @@ const Riwayat = () => {
   const [showDetail, setShowDetail] = useState(false);
   const filterRef = useRef(null);
 
+  // State untuk image zoom modal
+  const [imageZoomOpen, setImageZoomOpen] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState({ url: "", title: "" });
+
   // Close filter popover on outside click
   useEffect(() => {
     function handleClickOutside(e) {
@@ -332,7 +336,29 @@ const Riwayat = () => {
                 </div>
               </TableCell>
               <TableCell>{r.nama_lokasi}</TableCell>
-              <TableCell>{renderStatus(r.status)}</TableCell>
+              <TableCell>
+                <div className="flex flex-col gap-1">
+                  {renderStatus(r.status)}
+                  {r.gambar_bukti_selesai && (
+                    <div className="flex items-center gap-1 text-[10px] text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/30 w-fit">
+                      <svg
+                        className="size-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span>Bukti Foto</span>
+                    </div>
+                  )}
+                </div>
+              </TableCell>
               <TableCell className="text-center">
                 <button
                   onClick={() => handleViewDetail(r)}
@@ -396,6 +422,37 @@ const Riwayat = () => {
 
           {selectedPengaduan && (
             <div className="space-y-4 mt-4">
+              {/* Alert: Ada Bukti Foto dari Petugas */}
+              {selectedPengaduan.gambar_bukti_selesai && (
+                <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/40 rounded-lg p-4 animate-pulse-slow">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-green-500 rounded-lg">
+                      <svg
+                        className="size-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-green-300 mb-1">
+                        Pengaduan Selesai dengan Bukti Foto!
+                      </h4>
+                      <p className="text-sm text-green-200">
+                        Petugas telah mengirimkan foto bukti penyelesaian.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-neutral-400">
@@ -503,15 +560,103 @@ const Riwayat = () => {
                     <ImageIcon className="size-4" />
                     Foto Pengaduan
                   </div>
-                  <div className="relative rounded-lg overflow-hidden border border-neutral-800">
-                    <img
-                      src={selectedPengaduan.foto}
-                      alt="Foto Pengaduan"
-                      className="w-full h-auto max-h-96 object-contain bg-neutral-950"
-                      onError={(e) => {
-                        e.target.src = "/placeholder-image.png";
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-neutral-700 bg-neutral-950 flex-shrink-0">
+                      <img
+                        src={selectedPengaduan.foto}
+                        alt="Foto Pengaduan"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = "/placeholder-image.png";
+                        }}
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        setZoomedImage({
+                          url: selectedPengaduan.foto,
+                          title: "Foto Pengaduan",
+                        });
+                        setImageZoomOpen(true);
                       }}
-                    />
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium transition-colors shadow-lg hover:shadow-orange-500/25"
+                    >
+                      <svg
+                        className="size-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                        />
+                      </svg>
+                      Lihat Gambar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Gambar Bukti Penyelesaian dari Petugas/Admin */}
+              {selectedPengaduan.gambar_bukti_selesai && (
+                <div className="space-y-2 pt-2 border-t border-neutral-800">
+                  <div className="flex items-center gap-2 text-sm font-medium text-green-400">
+                    <svg
+                      className="size-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Bukti Penyelesaian dari Petugas
+                  </div>
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-green-500/60 bg-neutral-950 flex-shrink-0">
+                        <img
+                          src={selectedPengaduan.gambar_bukti_selesai}
+                          alt="Bukti Penyelesaian"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = "/placeholder-image.png";
+                          }}
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          setZoomedImage({
+                            url: selectedPengaduan.gambar_bukti_selesai,
+                            title: "Bukti Gambar",
+                          });
+                          setImageZoomOpen(true);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition-colors shadow-lg hover:shadow-green-500/25"
+                      >
+                        <svg
+                          className="size-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                          />
+                        </svg>
+                        Lihat Bukti
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -545,6 +690,50 @@ const Riwayat = () => {
             >
               Tutup
             </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Zoom Gambar - Lightbox Style */}
+      <Dialog open={imageZoomOpen} onOpenChange={setImageZoomOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] bg-black/95 border-neutral-700 p-0 overflow-hidden">
+          <div className="relative w-full h-full">
+            {/* Header */}
+            <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <ImageIcon className="size-5 text-orange-400" />
+                  {zoomedImage.title}
+                </h3>
+                <button
+                  onClick={() => setImageZoomOpen(false)}
+                  className="p-2 rounded-lg bg-neutral-800/80 hover:bg-neutral-700 text-white transition-colors"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Gambar */}
+            <div className="flex items-center justify-center w-full h-[85vh] p-8">
+              <img
+                src={zoomedImage.url}
+                alt={zoomedImage.title}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                onError={(e) => {
+                  e.target.src = "/placeholder-image.png";
+                }}
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-sm text-neutral-300">
+                  Klik di luar gambar atau tombol X untuk menutup
+                </p>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

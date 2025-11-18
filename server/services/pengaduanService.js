@@ -164,12 +164,22 @@ export const updatePengaduanStatus = async (
   status,
   saran_petugas,
   id_petugas,
-  tgl_selesai
+  tgl_selesai,
+  gambar_bukti_selesai = null,
+  file_id_bukti_selesai = null
 ) => {
   // Memanggil SP untuk update status pengaduan
   const [result] = await pool.query(
-    "CALL sp_update_pengaduan_status(?, ?, ?, ?, ?, @status_code, @message)",
-    [id_pengaduan, status, saran_petugas || null, id_petugas, tgl_selesai]
+    "CALL sp_update_pengaduan_status(?, ?, ?, ?, ?, ?, ?, @status_code, @message)",
+    [
+      id_pengaduan,
+      status,
+      saran_petugas || null,
+      id_petugas,
+      tgl_selesai,
+      gambar_bukti_selesai,
+      file_id_bukti_selesai,
+    ]
   );
 
   // Get OUT parameter
