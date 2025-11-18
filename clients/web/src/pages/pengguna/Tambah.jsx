@@ -52,6 +52,7 @@ const Tambah = () => {
   const [showCustomItem, setShowCustomItem] = useState(false);
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [alerts, setAlerts] = useState([]); // queue of { type, title, description, duration, onClosed }
   const fileRef = useRef(null);
 
@@ -202,16 +203,39 @@ const Tambah = () => {
         err?.response?.data?.message ||
         err.message ||
         "Gagal mengajukan pengaduan";
-      toast.error(errMsg);
-      setAlerts((prev) => [
-        ...prev,
-        {
-          type: "destructive",
-          title: "Gagal",
-          description: errMsg,
-          duration: 3500,
-        },
-      ]);
+
+      console.log("Error creating pengaduan:", errMsg); // Debug log
+
+      // Check if it's a duplicate pengaduan error from trigger
+      if (
+        errMsg.includes("sedang diproses") ||
+        errMsg.includes("sudah ada") ||
+        errMsg.includes("sudah disetujui") ||
+        errMsg.includes("dalam 2 hari terakhir") ||
+        errMsg.includes("Status:") ||
+        errMsg.includes("Item ini")
+      ) {
+        // Show simplified error dialog for duplicate
+        setErrorDialogOpen(true);
+      } else {
+        // Show regular toast for other errors
+        toast.error(errMsg, {
+          duration: 5000,
+          style: {
+            maxWidth: "500px",
+          },
+        });
+
+        setAlerts((prev) => [
+          ...prev,
+          {
+            type: "destructive",
+            title: "Gagal Mengajukan Pengaduan",
+            description: errMsg,
+            duration: 5000,
+          },
+        ]);
+      }
     } finally {
       setLoading(false);
     }
@@ -246,7 +270,7 @@ const Tambah = () => {
             Isi form singkat di bawah untuk mengajukan aduan.
           </CardDescription>
           <CardAction>
-            <div className="size-9 rounded-md bg-neutral-800/60 text-neutral-300 grid place-items-center">
+            <div className="grid rounded-md size-9 bg-neutral-800/60 text-neutral-300 place-items-center">
               <Megaphone className="size-5" />
             </div>
           </CardAction>
@@ -255,14 +279,14 @@ const Tambah = () => {
         <CardContent className="pt-6">
           <form
             onSubmit={onSubmit}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+            className="grid grid-cols-1 gap-6 lg:grid-cols-12"
           >
             {/* Left: Upload section */}
             <div className="lg:col-span-5">
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
+              <div className="p-4 border rounded-xl border-neutral-800 bg-neutral-900/40">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
-                    <ImagePlus className="size-4 text-orange-400" /> Foto
+                  <label className="flex items-center gap-2 text-sm font-medium text-neutral-300">
+                    <ImagePlus className="text-orange-400 size-4" /> Foto
                     (opsional)
                   </label>
                   {foto && (
@@ -272,7 +296,7 @@ const Tambah = () => {
                         setFoto(null);
                         if (fileRef.current) fileRef.current.value = "";
                       }}
-                      className="text-xs text-neutral-400 hover:text-neutral-200 inline-flex items-center gap-1"
+                      className="inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-neutral-200"
                       title="Hapus foto"
                     >
                       <X className="size-3.5" /> Hapus
@@ -287,20 +311,20 @@ const Tambah = () => {
                     const f = e.dataTransfer.files?.[0];
                     if (f && f.type?.startsWith("image/")) setFoto(f);
                   }}
-                  className="relative grid place-items-center rounded-lg border-2 border-dashed border-neutral-700 hover:border-orange-500/60 hover:bg-neutral-900/60 transition-colors cursor-pointer min-h-64"
+                  className="relative grid transition-colors border-2 border-dashed rounded-lg cursor-pointer place-items-center border-neutral-700 hover:border-orange-500/60 hover:bg-neutral-900/60 min-h-64"
                 >
                   {previewUrl ? (
                     <img
                       src={previewUrl}
                       alt="preview"
-                      className="max-h-72 w-full object-contain p-2"
+                      className="object-contain w-full p-2 max-h-72"
                     />
                   ) : (
-                    <div className="text-center p-6">
-                      <div className="mx-auto mb-3 size-10 rounded-full bg-neutral-800/70 border border-neutral-700 grid place-items-center text-neutral-300">
+                    <div className="p-6 text-center">
+                      <div className="grid mx-auto mb-3 border rounded-full size-10 bg-neutral-800/70 border-neutral-700 place-items-center text-neutral-300">
                         <ImagePlus className="size-5" />
                       </div>
-                      <div className="text-neutral-200 font-medium">
+                      <div className="font-medium text-neutral-200">
                         Klik untuk unggah
                       </div>
                       <div className="text-sm text-neutral-500">
@@ -332,7 +356,7 @@ const Tambah = () => {
             </div>
 
             {/* Right: Form fields */}
-            <div className="lg:col-span-7 grid gap-4">
+            <div className="grid gap-4 lg:col-span-7">
               <div className="grid gap-1.5">
                 <label className="text-sm font-medium text-neutral-300">
                   Nama Pengaduan
@@ -374,7 +398,7 @@ const Tambah = () => {
                     </SelectTrigger>
                     <SelectContent
                       position="popper"
-                      className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
+                      className="overflow-y-auto bg-neutral-900/95 border-neutral-700 max-h-60"
                     >
                       {Array.isArray(kategoriLokasi) &&
                         kategoriLokasi.map((k) => (
@@ -390,7 +414,7 @@ const Tambah = () => {
                   </Select>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="grid gap-1.5">
                     <label className="text-sm font-medium text-neutral-300">
                       Lokasi
@@ -411,7 +435,7 @@ const Tambah = () => {
                       </SelectTrigger>
                       <SelectContent
                         position="popper"
-                        className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
+                        className="overflow-y-auto bg-neutral-900/95 border-neutral-700 max-h-60"
                       >
                         {Array.isArray(filteredLokasi) &&
                           filteredLokasi.map((l) => (
@@ -449,7 +473,7 @@ const Tambah = () => {
                       </SelectTrigger>
                       <SelectContent
                         position="popper"
-                        className="bg-neutral-900/95 border-neutral-700 max-h-60 overflow-y-auto"
+                        className="overflow-y-auto bg-neutral-900/95 border-neutral-700 max-h-60"
                       >
                         {Array.isArray(filteredItems) &&
                           filteredItems.map((it) => (
@@ -493,18 +517,18 @@ const Tambah = () => {
                 )}
               </div>
 
-              <CardFooter className="px-0 mt-2 gap-2">
+              <CardFooter className="gap-2 px-0 mt-2">
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-4 py-2 rounded-md border border-neutral-700 bg-neutral-900/60 text-neutral-300 hover:bg-neutral-800 transition-colors text-sm"
+                  className="px-4 py-2 text-sm transition-colors border rounded-md border-neutral-700 bg-neutral-900/60 text-neutral-300 hover:bg-neutral-800"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 rounded-md bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60 text-sm font-semibold transition-colors"
+                  className="px-4 py-2 text-sm font-semibold text-white transition-colors bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-60"
                 >
                   {loading ? "Mengirim..." : "Kirim Pengaduan"}
                 </button>
@@ -518,8 +542,8 @@ const Tambah = () => {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="bg-neutral-900/95 border-neutral-800 sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="text-neutral-100 flex items-center gap-2">
-              <Send className="size-5 text-orange-500" />
+            <DialogTitle className="flex items-center gap-2 text-neutral-100">
+              <Send className="text-orange-500 size-5" />
               Konfirmasi Pengaduan
             </DialogTitle>
             <DialogDescription className="text-neutral-400">
@@ -527,11 +551,11 @@ const Tambah = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-4">
-            <div className="bg-neutral-800/40 rounded-md p-3 space-y-2 text-sm">
+          <div className="py-4 space-y-3">
+            <div className="p-3 space-y-2 text-sm rounded-md bg-neutral-800/40">
               <div className="flex justify-between">
                 <span className="text-neutral-400">Nama Pengaduan:</span>
-                <span className="text-neutral-100 font-medium">
+                <span className="font-medium text-neutral-100">
                   {nama_pengaduan}
                 </span>
               </div>
@@ -549,7 +573,7 @@ const Tambah = () => {
                   {showCustomItem ? (
                     <span>
                       {customItem}{" "}
-                      <span className="text-amber-400 text-xs italic">
+                      <span className="text-xs italic text-amber-400">
                         (item baru)
                       </span>
                     </span>
@@ -562,16 +586,16 @@ const Tambah = () => {
               </div>
               {deskripsi && (
                 <div className="pt-2 border-t border-neutral-700">
-                  <span className="text-neutral-400 block mb-1">
+                  <span className="block mb-1 text-neutral-400">
                     Deskripsi:
                   </span>
-                  <span className="text-neutral-100 text-xs">{deskripsi}</span>
+                  <span className="text-xs text-neutral-100">{deskripsi}</span>
                 </div>
               )}
               {foto && (
                 <div className="pt-2 border-t border-neutral-700">
-                  <span className="text-neutral-400 block mb-1">Foto:</span>
-                  <span className="text-green-400 text-xs">
+                  <span className="block mb-1 text-neutral-400">Foto:</span>
+                  <span className="text-xs text-green-400">
                     ✓ Foto terlampir
                   </span>
                 </div>
@@ -579,7 +603,7 @@ const Tambah = () => {
             </div>
 
             {showCustomItem && (
-              <div className="bg-amber-900/20 border border-amber-700/30 rounded-md p-3">
+              <div className="p-3 border rounded-md bg-amber-900/20 border-amber-700/30">
                 <p className="text-xs text-amber-300">
                   <strong>Catatan:</strong> Item baru yang Anda ajukan akan
                   diverifikasi oleh petugas terlebih dahulu.
@@ -593,7 +617,7 @@ const Tambah = () => {
               type="button"
               onClick={() => setConfirmOpen(false)}
               disabled={loading}
-              className="px-4 py-2 text-sm rounded-md border border-neutral-800 text-neutral-300 hover:bg-neutral-800 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm transition-colors border rounded-md border-neutral-800 text-neutral-300 hover:bg-neutral-800 disabled:opacity-50"
             >
               Periksa Kembali
             </button>
@@ -601,7 +625,7 @@ const Tambah = () => {
               type="button"
               onClick={handleConfirmSubmit}
               disabled={loading}
-              className="px-4 py-2 text-sm rounded-md bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60 transition-colors flex items-center gap-2"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-white transition-colors bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -616,6 +640,59 @@ const Tambah = () => {
               )}
             </button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Dialog - Simple & Minimalist */}
+      <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+        <DialogContent className="max-w-sm bg-neutral-900 border-neutral-800 text-neutral-100">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-medium text-orange-500">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Pengaduan Sudah Ada
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="mb-4 text-sm leading-relaxed text-neutral-300">
+              Item yang Anda pilih di lokasi ini sudah dilaporkan dan sedang
+              dalam penanganan.
+            </p>
+
+            <div className="p-3 border rounded-lg bg-neutral-800/50 border-neutral-700">
+              <p className="mb-2 text-xs text-neutral-400">Saran:</p>
+              <ul className="space-y-1 text-xs text-neutral-300">
+                <li>• Tunggu hingga pengaduan sebelumnya selesai</li>
+                <li>• Pilih item atau lokasi yang berbeda</li>
+                <li>• Cek status di menu Riwayat Pengaduan</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setErrorDialogOpen(false);
+                resetForm();
+              }}
+              className="flex-1 px-4 py-2 text-sm transition-colors border rounded-lg border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+            >
+              Coba Lagi
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

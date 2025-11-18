@@ -116,10 +116,50 @@ export const createPengaduan = async (req, res) => {
     res.status(201).json({ message: "Pengaduan berhasil diajukan" });
   } catch (error) {
     console.error("Error createPengaduan:", error);
-    if (error.sqlState === "45000") {
-      return res.status(400).json({ message: error.sqlMessage });
+
+    // Handle MySQL trigger error (SQLSTATE 45000)
+    if (error.sqlState === "45000" || error.code === "ER_SIGNAL_EXCEPTION") {
+      const triggerMessage =
+        error.sqlMessage || error.message || "Pengaduan tidak dapat diajukan";
+
+      // Expand short message from trigger for better UX
+      let userMessage = triggerMessage;
+      if (triggerMessage.includes("sedang diproses")) {
+        userMessage = `Pengaduan untuk item ini sudah ada dan sedang dalam penanganan. ${triggerMessage}`;
+      }
+
+      return res.status(400).json({
+        message: userMessage,
+      });
     }
-    res.status(500).json({ message: "Terjadi kesalahan server" });
+
+    // Handle duplicate entry or other validation errors
+    if (
+      error.message &&
+      (error.message.includes("sudah disetujui") ||
+        error.message.includes("sedang diproses") ||
+        error.message.includes("dalam 2 hari terakhir"))
+    ) {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
+    // Log MySQL error details for debugging
+    if (error.errno) {
+      console.error("MySQL Error Details:", {
+        code: error.code,
+        errno: error.errno,
+        sqlState: error.sqlState,
+        sqlMessage: error.sqlMessage,
+      });
+    }
+
+    res.status(500).json({
+      message: "Terjadi kesalahan server",
+      detail:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
