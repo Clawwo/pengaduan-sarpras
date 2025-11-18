@@ -164,37 +164,53 @@ export const updatePengaduanStatus = async (
   status,
   saran_petugas,
   id_petugas,
-  tgl_selesai,
   gambar_bukti_selesai = null,
   file_id_bukti_selesai = null
 ) => {
-  // Memanggil SP untuk update status pengaduan
-  const [result] = await pool.query(
-    "CALL sp_update_pengaduan_status(?, ?, ?, ?, ?, ?, ?, @status_code, @message)",
-    [
+  try {
+    console.log("🔧 Parameters to SP:", {
       id_pengaduan,
       status,
-      saran_petugas || null,
+      saran_petugas,
       id_petugas,
-      tgl_selesai,
       gambar_bukti_selesai,
       file_id_bukti_selesai,
-    ]
-  );
+    });
 
-  // Get OUT parameter
-  const [outParams] = await pool.query(
-    "SELECT @status_code as statusCode, @message as message"
-  );
+    // Memanggil SP untuk update status pengaduan - HANYA 6 PARAMETER + 2 OUT
+    const [result] = await pool.query(
+      "CALL sp_update_pengaduan_status(?, ?, ?, ?, ?, ?, @status_code, @message)",
+      [
+        id_pengaduan,
+        status,
+        saran_petugas || null,
+        id_petugas || null,
+        gambar_bukti_selesai,
+        file_id_bukti_selesai,
+      ]
+    );
 
-  const { statusCode, message } = outParams[0];
+    // Get OUT parameter
+    const [outParams] = await pool.query(
+      "SELECT @status_code as statusCode, @message as message"
+    );
 
-  // Menangani Error dengan debug
-  if (statusCode === 404) {
-    throw new Error(message || "Pengaduan tidak ditemukan");
-  } else if (statusCode === 500) {
-    throw new Error(message || "Database error occurred");
+    const { statusCode, message } = outParams[0];
+    console.log("📊 SP Response:", { statusCode, message });
+
+    // Menangani Error dengan debug
+    if (statusCode === 404) {
+      throw new Error(message || "Pengaduan tidak ditemukan");
+    } else if (statusCode === 500) {
+      throw new Error(message || "Database error occurred");
+    }
+
+    return {
+      success: true,
+      message: message || "Status pengaduan berhasil diperbarui",
+    };
+  } catch (error) {
+    console.error("❌ Error in updatePengaduanStatus:", error);
+    throw error;
   }
-
-  return true;
 };

@@ -189,49 +189,48 @@ export const updatePengaduanStatus = async (req, res) => {
     const { id } = req.params; // id_pengaduan
     const { status, saran_petugas } = req.body;
 
+    console.log("📨 Update status request:", { id, status, saran_petugas });
+
     const oldData = await getPengaduanByIdService(id);
     if (!oldData) {
       return res.status(404).json({ message: "Pengaduan tidak ditemukan" });
     }
-    let tgl_selesai = null;
+
     let gambar_bukti_url = null;
     let gambar_bukti_fileId = null;
 
-    if (["Selesai", "Ditolak"].includes(status)) {
-      tgl_selesai = new Date();
-
-      // Upload gambar bukti selesai jika ada
-      if (status === "Selesai" && req.file) {
-        try {
-          const uploadResponse = await uploadImage(
-            req.file.buffer,
-            req.file.originalname,
-            "/Pengaduan_Sarpras/Bukti_Selesai"
-          );
-          gambar_bukti_url = uploadResponse.url;
-          gambar_bukti_fileId = uploadResponse.fileId;
-          console.log(
-            "✅ Gambar bukti selesai berhasil diupload:",
-            uploadResponse.url
-          );
-        } catch (err) {
-          console.error("⚠️ Gagal upload gambar bukti:", err.message);
-          return res
-            .status(500)
-            .json({ message: "Gagal upload gambar bukti penyelesaian" });
-        }
-      }
-
-      // Hapus foto pengaduan lama dari ImageKit
-      if (oldData.file_id) {
-        try {
-          await deleteImage(oldData.file_id);
-          console.log("Foto pengaduan dihapus dari ImageKit:", oldData.file_id);
-        } catch (err) {
-          console.error("Gagal hapus foto dari ImageKit:", err.message);
-        }
+    // 🔥 HAPUS bagian set tgl_selesai manual - biarkan trigger yang handle
+    if (status === "Selesai" && req.file) {
+      try {
+        const uploadResponse = await uploadImage(
+          req.file.buffer,
+          req.file.originalname,
+          "/Pengaduan_Sarpras/Bukti_Selesai"
+        );
+        gambar_bukti_url = uploadResponse.url;
+        gambar_bukti_fileId = uploadResponse.fileId;
+        console.log(
+          "✅ Gambar bukti selesai berhasil diupload:",
+          uploadResponse.url
+        );
+      } catch (err) {
+        console.error("⚠️ Gagal upload gambar bukti:", err.message);
+        return res
+          .status(500)
+          .json({ message: "Gagal upload gambar bukti penyelesaian" });
       }
     }
+
+    // Hapus foto pengaduan lama dari ImageKit jika status Selesai/Ditolak
+    if (["Selesai", "Ditolak"].includes(status) && oldData.file_id) {
+      try {
+        await deleteImage(oldData.file_id);
+        console.log("Foto pengaduan dihapus dari ImageKit:", oldData.file_id);
+      } catch (err) {
+        console.error("Gagal hapus foto dari ImageKit:", err.message);
+      }
+    }
+
     // Petugas: catat id_petugas berdasarkan token. Admin: izinkan tanpa keharusan menjadi petugas,
     // gunakan id_petugas yang sudah tercatat (tetap) agar tidak merubah penugasannya.
     let id_petugas = oldData.id_petugas || null;
@@ -245,14 +244,15 @@ export const updatePengaduanStatus = async (req, res) => {
       }
       id_petugas = mapped;
     }
-    await updatePengaduanStatusService(
-      id,
-      status,
-      saran_petugas,
-      id_petugas,
-      tgl_selesai,
-      gambar_bukti_url,
-      gambar_bukti_fileId
+
+    // 🔥 PANGGIL SERVICE DENGAN PARAMETER YANG BENAR - TANPA tgl_selesai
+    const result = await updatePengaduanStatusService(
+      parseInt(id), // id_pengaduan
+      status, // status
+      saran_petugas || null, // saran_petugas
+      id_petugas, // id_petugas
+      gambar_bukti_url, // gambar_bukti_selesai (parameter 5)
+      gambar_bukti_fileId // file_id_bukti_selesai (parameter 6)
     );
 
     // 🔔 Kirim notifikasi ke user pemilik pengaduan dengan pesan yang jelas
@@ -314,12 +314,21 @@ export const updatePengaduanStatus = async (req, res) => {
       console.error("Gagal mencatat riwayat aksi:", logError);
     }
 
-    // Note: Temporary items are NOT auto-approved when status changes.
-    // Admin must manually approve them via the temporary items moderation page.
-    res.json({ message: "Status pengaduan berhasil diperbarui" });
+    res.json({
+      success: true,
+      message: result.message || "Status pengaduan berhasil diperbarui",
+      data: {
+        id_pengaduan: id,
+        status,
+        // tgl_selesai akan diisi OTOMATIS oleh trigger
+      },
+    });
   } catch (error) {
     console.error("Error updatePengaduanStatus:", error);
-    res.status(500).json({ message: "Terjadi kesalahan server" });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Terjadi kesalahan server",
+    });
   }
 };
 

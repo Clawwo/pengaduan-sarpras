@@ -1,9 +1,9 @@
+-- Jalankan di MySQL
 USE pengaduan_sarpras;
 
 DROP PROCEDURE IF EXISTS sp_update_pengaduan_status;
 
 DELIMITER $$
-
 CREATE PROCEDURE sp_update_pengaduan_status(
   IN p_id_pengaduan INT,
   IN p_status VARCHAR(50),
@@ -14,7 +14,7 @@ CREATE PROCEDURE sp_update_pengaduan_status(
   OUT p_status_code INT,
   OUT p_message VARCHAR(255)
 )
-BEGIN  -- ✅ TANPA LABEL
+BEGIN
   DECLARE v_exists INT DEFAULT 0;
 
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -38,11 +38,10 @@ BEGIN  -- ✅ TANPA LABEL
     UPDATE pengaduan_sarpras_pengaduan
     SET 
         status = p_status,
-        saran_petugas = p_saran_petugas,
-        id_petugas = p_id_petugas,
-        tgl_selesai = IF(p_status IN ('Selesai', 'Ditolak'), NOW(), NULL),
-        gambar_bukti_selesai = p_gambar_bukti_selesai,
-        file_id_bukti_selesai = p_file_id_bukti_selesai,
+        saran_petugas = NULLIF(p_saran_petugas, ''),
+        id_petugas = NULLIF(p_id_petugas, 0),
+        gambar_bukti_selesai = NULLIF(p_gambar_bukti_selesai, ''),
+        file_id_bukti_selesai = NULLIF(p_file_id_bukti_selesai, ''),
         updated_at = NOW()
     WHERE id_pengaduan = p_id_pengaduan;
 
@@ -52,5 +51,4 @@ BEGIN  -- ✅ TANPA LABEL
   END IF;
 
 END$$
-
 DELIMITER ;
