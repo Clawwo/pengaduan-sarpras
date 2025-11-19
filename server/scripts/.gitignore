@@ -1,0 +1,13 @@
+# Ignore backup files
+backups/
+*.sql
+*.sql.gz
+
+# Ignore log files
+*.log
+
+# Ignore script with password (jika sudah dikonfigurasi)
+# backup_database.sh
+
+# Keep directory structure
+!backups/.gitkeep
