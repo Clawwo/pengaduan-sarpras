@@ -142,8 +142,7 @@ const AdminPengaduan = () => {
   const [status, setStatus] = useState("");
   const [saran, setSaran] = useState("");
   const [saving, setSaving] = useState(false);
-  const [buktiFoto, setBuktiFoto] = useState(null); // File gambar bukti
-  const [buktiFotoPreview, setBuktiFotoPreview] = useState(null); // Preview gambar
+  const [buktiFoto, setBuktiFoto] = useState([]); // Array of file gambar bukti (max 5)
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState(new Set());
@@ -161,6 +160,19 @@ const AdminPengaduan = () => {
   const [imageError, setImageError] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
+
+  // Generate preview URLs for uploaded images
+  const previewUrls = React.useMemo(
+    () => buktiFoto.map((file) => URL.createObjectURL(file)),
+    [buktiFoto]
+  );
+
+  // Cleanup preview URLs on unmount
+  React.useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -200,11 +212,37 @@ const AdminPengaduan = () => {
     setCurrent(row);
     setStatus(""); // Start with empty to show placeholder
     setSaran(row?.saran_petugas || "");
-    setBuktiFoto(null);
-    setBuktiFotoPreview(null);
+    setBuktiFoto([]); // Reset to empty array
     setShowConfirmDialog(false);
     setPendingStatus("");
     setOpen(true);
+  };
+
+  const handleAddImages = (files) => {
+    const newFiles = Array.from(files).filter((f) =>
+      f.type?.startsWith("image/")
+    );
+    const totalFiles = buktiFoto.length + newFiles.length;
+
+    if (totalFiles > 5) {
+      toast.error("Maksimal 5 gambar");
+      setAlerts((prev) => [
+        ...prev,
+        {
+          type: "destructive",
+          title: "Terlalu banyak gambar",
+          description: "Maksimal 5 gambar bukti per pengaduan",
+          duration: 3000,
+        },
+      ]);
+      return;
+    }
+
+    setBuktiFoto((prev) => [...prev, ...newFiles]);
+  };
+
+  const handleRemoveImage = (index) => {
+    setBuktiFoto((prev) => prev.filter((_, i) => i !== index));
   };
 
   const submitManage = async (e) => {
@@ -232,11 +270,15 @@ const AdminPengaduan = () => {
       const token = localStorage.getItem("token");
 
       // Jika status Selesai dan ada gambar bukti, gunakan FormData
-      if (backendStatus === "Selesai" && buktiFoto) {
+      if (backendStatus === "Selesai" && buktiFoto.length > 0) {
         const formData = new FormData();
         formData.append("status", backendStatus);
         formData.append("saran_petugas", saran || "");
-        formData.append("gambar", buktiFoto);
+
+        // Append multiple images
+        buktiFoto.forEach((file) => {
+          formData.append("gambar", file);
+        });
 
         await axios.patch(
           `${apiUrl}/api/pengaduan/${current.id_pengaduan}/status`,
@@ -268,8 +310,7 @@ const AdminPengaduan = () => {
         },
       ]);
       setOpen(false);
-      setBuktiFoto(null);
-      setBuktiFotoPreview(null);
+      setBuktiFoto([]);
       setShowConfirmDialog(false);
       setPendingStatus("");
       fetchAll();
@@ -1029,45 +1070,57 @@ const AdminPengaduan = () => {
               {/* Upload Gambar Bukti - Hanya muncul jika status Selesai */}
               {status === "Selesai" && (
                 <div className="p-4 border rounded-lg border-neutral-700 bg-neutral-800/30">
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="size-4 text-orange-500" />
-                      Gambar Bukti Penyelesaian (opsional)
-                    </div>
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-neutral-300">
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="size-4 text-orange-500" />
+                        Gambar Bukti Penyelesaian (opsional) - Max 5
+                      </div>
+                    </label>
+                    {buktiFoto.length > 0 && (
+                      <span className="text-xs text-neutral-400">
+                        {buktiFoto.length}/5 gambar
+                      </span>
+                    )}
+                  </div>
                   <p className="mb-3 text-xs text-neutral-400">
                     Upload foto bukti bahwa pengaduan telah selesai ditangani
                   </p>
 
-                  {/* Preview gambar */}
-                  {buktiFotoPreview && (
-                    <div className="relative mb-3 group">
-                      <img
-                        src={buktiFotoPreview}
-                        alt="Preview bukti"
-                        className="w-full h-auto max-h-[200px] object-contain rounded-md border-2 border-neutral-700 bg-neutral-950/50"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setBuktiFoto(null);
-                          setBuktiFotoPreview(null);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-md hover:bg-red-600 text-white"
-                      >
-                        <X className="size-4" />
-                      </button>
+                  {/* Image Previews Grid */}
+                  {buktiFoto.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      {previewUrls.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={url}
+                            alt={`preview ${index + 1}`}
+                            className="object-cover w-full h-32 border rounded-lg border-neutral-700"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-1 right-1 p-1 rounded-full bg-red-500/90 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Hapus gambar"
+                          >
+                            <X className="size-3.5" />
+                          </button>
+                          <div className="absolute bottom-1 left-1 px-1.5 py-0.5 text-[10px] bg-black/70 text-white rounded">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
 
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setBuktiFoto(file);
-                        setBuktiFotoPreview(URL.createObjectURL(file));
+                      const files = e.target.files;
+                      if (files) {
+                        handleAddImages(files);
                       }
                     }}
                     className="w-full text-sm text-neutral-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-orange-500 file:text-white hover:file:bg-orange-600 file:cursor-pointer cursor-pointer"

@@ -24,9 +24,7 @@ import {
 const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
   const [imageZoomOpen, setImageZoomOpen] = useState(false);
   const [zoomedImage, setZoomedImage] = useState({ url: "", title: "" });
-  const [imageType, setImageType] = useState("foto"); // "foto" or "bukti"
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [currentBuktiIndex, setCurrentBuktiIndex] = useState(0);
 
   // Parse foto array from JSON string
   const fotoArray = React.useMemo(() => {
@@ -34,52 +32,23 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
     try {
       const parsed = JSON.parse(pengaduan.foto);
       return Array.isArray(parsed) ? parsed : [parsed];
-    } catch {
+    } catch (e) {
       // Fallback for old single image format
       return [pengaduan.foto];
     }
   }, [pengaduan?.foto]);
 
-  // Parse bukti array from JSON string
-  const buktiArray = React.useMemo(() => {
-    if (!pengaduan?.gambar_bukti_selesai) return [];
-    try {
-      const parsed = JSON.parse(pengaduan.gambar_bukti_selesai);
-      return Array.isArray(parsed) ? parsed : [parsed];
-    } catch {
-      // Fallback for old single image format
-      return [pengaduan.gambar_bukti_selesai];
-    }
-  }, [pengaduan?.gambar_bukti_selesai]);
-
   // Reset image index when modal opens with new pengaduan
   React.useEffect(() => {
     setCurrentImageIndex(0);
-    setCurrentBuktiIndex(0);
   }, [pengaduan?.id_pengaduan]);
 
   const handlePrevImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev > 0 ? prev - 1 : fotoArray.length - 1
-    );
+    setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : fotoArray.length - 1));
   };
 
   const handleNextImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev < fotoArray.length - 1 ? prev + 1 : 0
-    );
-  };
-
-  const handlePrevBukti = () => {
-    setCurrentBuktiIndex((prev) =>
-      prev > 0 ? prev - 1 : buktiArray.length - 1
-    );
-  };
-
-  const handleNextBukti = () => {
-    setCurrentBuktiIndex((prev) =>
-      prev < buktiArray.length - 1 ? prev + 1 : 0
-    );
+    setCurrentImageIndex((prev) => (prev < fotoArray.length - 1 ? prev + 1 : 0));
   };
 
   const IconCheck = (props) => (
@@ -161,50 +130,9 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
     );
   };
 
-  const handleZoomImage = (url, title, type = "foto") => {
+  const handleZoomImage = (url, title) => {
     setZoomedImage({ url, title });
-    setImageType(type);
     setImageZoomOpen(true);
-  };
-
-  const handlePrevZoomedImage = () => {
-    if (imageType === "foto") {
-      const newIndex =
-        currentImageIndex > 0 ? currentImageIndex - 1 : fotoArray.length - 1;
-      setCurrentImageIndex(newIndex);
-      setZoomedImage({
-        url: fotoArray[newIndex],
-        title: `Foto Pengaduan ${newIndex + 1}`,
-      });
-    } else {
-      const newIndex =
-        currentBuktiIndex > 0 ? currentBuktiIndex - 1 : buktiArray.length - 1;
-      setCurrentBuktiIndex(newIndex);
-      setZoomedImage({
-        url: buktiArray[newIndex],
-        title: `Bukti Penyelesaian ${newIndex + 1}`,
-      });
-    }
-  };
-
-  const handleNextZoomedImage = () => {
-    if (imageType === "foto") {
-      const newIndex =
-        currentImageIndex < fotoArray.length - 1 ? currentImageIndex + 1 : 0;
-      setCurrentImageIndex(newIndex);
-      setZoomedImage({
-        url: fotoArray[newIndex],
-        title: `Foto Pengaduan ${newIndex + 1}`,
-      });
-    } else {
-      const newIndex =
-        currentBuktiIndex < buktiArray.length - 1 ? currentBuktiIndex + 1 : 0;
-      setCurrentBuktiIndex(newIndex);
-      setZoomedImage({
-        url: buktiArray[newIndex],
-        title: `Bukti Penyelesaian ${newIndex + 1}`,
-      });
-    }
   };
 
   if (!pengaduan) return null;
@@ -212,7 +140,7 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl max-h-[90vh] bg-neutral-900 border-neutral-800 text-neutral-100 overflow-y-auto">
+        <DialogContent className="max-w-[85vw] lg:max-w-5xl max-h-[90vh] bg-neutral-900 border-neutral-800 text-neutral-100 overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
               <Eye className="text-orange-400 size-5" />
@@ -222,7 +150,7 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
 
           <div className="mt-4 space-y-6">
             {/* Alert: Ada Bukti Foto dari Petugas */}
-            {buktiArray.length > 0 && (
+            {pengaduan.gambar_bukti_selesai && (
               <div className="p-4 border-2 rounded-lg bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/40 animate-pulse-slow">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-green-500 rounded-lg shrink-0">
@@ -245,8 +173,7 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
                       Pengaduan Selesai dengan Bukti Foto!
                     </h4>
                     <p className="text-sm text-green-200">
-                      Petugas telah mengirimkan {buktiArray.length} foto bukti
-                      penyelesaian.
+                      Petugas telah mengirimkan foto bukti penyelesaian.
                     </p>
                   </div>
                 </div>
@@ -422,7 +349,7 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
                               e.target.src = "/placeholder-image.png";
                             }}
                           />
-
+                          
                           {/* Counter Badge - Always visible if multiple */}
                           {fotoArray.length > 1 && (
                             <div className="absolute top-2 left-2 px-2 py-1 bg-black/80 text-white text-xs rounded font-medium">
@@ -438,38 +365,14 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
                                 className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="Foto sebelumnya"
                               >
-                                <svg
-                                  className="size-5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 19l-7-7 7-7"
-                                  />
-                                </svg>
+                                <ChevronLeft className="size-5" />
                               </button>
                               <button
                                 onClick={handleNextImage}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="Foto berikutnya"
                               >
-                                <svg
-                                  className="size-5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 5l7 7-7 7"
-                                  />
-                                </svg>
+                                <ChevronRight className="size-5" />
                               </button>
                             </>
                           )}
@@ -514,36 +417,29 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
                 )}
 
                 {/* Foto Bukti Penyelesaian */}
-                {buktiArray.length > 0 && (
+                {pengaduan.gambar_bukti_selesai && (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs font-medium text-green-400">
-                        <svg
-                          className="size-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        Bukti Penyelesaian dari Petugas
-                      </div>
-                      {buktiArray.length > 1 && (
-                        <span className="px-2 py-0.5 text-[10px] rounded-full bg-green-500/20 text-green-400 font-medium">
-                          {currentBuktiIndex + 1}/{buktiArray.length}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2 text-xs font-medium text-green-400">
+                      <svg
+                        className="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Bukti Penyelesaian dari Petugas
                     </div>
                     <div className="p-3 border-2 rounded-lg bg-green-500/10 border-green-500/30">
-                      <div className="relative w-full mb-3 overflow-hidden rounded-lg aspect-video bg-neutral-950 group">
+                      <div className="relative w-full mb-3 overflow-hidden rounded-lg aspect-video bg-neutral-950">
                         <img
-                          src={buktiArray[currentBuktiIndex]}
-                          alt={`Bukti Penyelesaian ${currentBuktiIndex + 1}`}
+                          src={pengaduan.gambar_bukti_selesai}
+                          alt="Bukti Penyelesaian"
                           className="object-contain w-full h-full"
                           onError={(e) => {
                             e.target.src = "/placeholder-image.png";
@@ -553,9 +449,8 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
                           <button
                             onClick={() =>
                               handleZoomImage(
-                                buktiArray[currentBuktiIndex],
-                                `Bukti Penyelesaian ${currentBuktiIndex + 1}`,
-                                "bukti"
+                                pengaduan.gambar_bukti_selesai,
+                                "Bukti Penyelesaian"
                               )
                             }
                             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/90 hover:bg-green-500 text-white text-sm font-medium transition-colors"
@@ -564,51 +459,13 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
                             Perbesar
                           </button>
                         </div>
-
-                        {/* Navigation arrows for multiple bukti */}
-                        {buktiArray.length > 1 && (
-                          <>
-                            <button
-                              onClick={handlePrevBukti}
-                              className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-all"
-                              aria-label="Previous bukti"
-                            >
-                              <ChevronLeft className="size-5" />
-                            </button>
-                            <button
-                              onClick={handleNextBukti}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-all"
-                              aria-label="Next bukti"
-                            >
-                              <ChevronRight className="size-5" />
-                            </button>
-                          </>
-                        )}
                       </div>
-
-                      {/* Dots indicator for multiple bukti */}
-                      {buktiArray.length > 1 && (
-                        <div className="flex items-center justify-center gap-1.5">
-                          {buktiArray.map((_, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setCurrentBuktiIndex(index)}
-                              className={`h-1.5 rounded-full transition-all ${
-                                index === currentBuktiIndex
-                                  ? "w-6 bg-green-500"
-                                  : "w-1.5 bg-neutral-600 hover:bg-neutral-500"
-                              }`}
-                              aria-label={`Go to bukti ${index + 1}`}
-                            />
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
 
                 {/* Placeholder jika tidak ada gambar */}
-                {fotoArray.length === 0 && buktiArray.length === 0 && (
+                {fotoArray.length === 0 && !pengaduan.gambar_bukti_selesai && (
                   <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg bg-neutral-800/40 border-neutral-700">
                     <div className="text-center text-neutral-500">
                       <ImageIcon className="mx-auto mb-2 opacity-50 size-12" />
@@ -619,24 +476,27 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
               </div>
             </div>
           </div>
+
+          <div className="flex justify-end gap-2 pt-4 mt-6 border-t border-neutral-800">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="px-4 py-2 transition-colors border rounded-md border-neutral-800 bg-neutral-900/60 text-neutral-300 hover:bg-neutral-800"
+            >
+              Tutup
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Modal Zoom Gambar - Lightbox Style */}
       <Dialog open={imageZoomOpen} onOpenChange={setImageZoomOpen}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] bg-black/95 border-neutral-700 p-0 overflow-hidden">
-          <div className="relative w-full h-full group">
+          <div className="relative w-full h-full">
             {/* Header */}
             <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/80 to-transparent">
               <div className="flex items-center justify-between">
                 <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
-                  <ImageIcon
-                    className={
-                      imageType === "foto"
-                        ? "text-orange-400 size-5"
-                        : "text-green-400 size-5"
-                    }
-                  />
+                  <ImageIcon className="text-orange-400 size-5" />
                   {zoomedImage.title}
                 </h3>
                 <button
@@ -660,55 +520,12 @@ const DetailPengaduanModal = ({ open, onOpenChange, pengaduan }) => {
               />
             </div>
 
-            {/* Navigation Arrows for Zoomed Image - Multiple images */}
-            {((imageType === "foto" && fotoArray.length > 1) ||
-              (imageType === "bukti" && buktiArray.length > 1)) && (
-              <>
-                <button
-                  type="button"
-                  onClick={handlePrevZoomedImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/60 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                  title={
-                    imageType === "foto"
-                      ? "Foto sebelumnya"
-                      : "Bukti sebelumnya"
-                  }
-                >
-                  <ChevronLeft className="size-6" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextZoomedImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/60 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                  title={
-                    imageType === "foto"
-                      ? "Foto berikutnya"
-                      : "Bukti berikutnya"
-                  }
-                >
-                  <ChevronRight className="size-6" />
-                </button>
-              </>
-            )}
-
             {/* Footer */}
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
               <div className="flex items-center justify-center gap-2">
-                {imageType === "foto" && fotoArray.length > 1 ? (
-                  <p className="text-sm text-neutral-300">
-                    {currentImageIndex + 1}/{fotoArray.length} • Gunakan arrow
-                    atau klik di luar untuk menutup
-                  </p>
-                ) : imageType === "bukti" && buktiArray.length > 1 ? (
-                  <p className="text-sm text-neutral-300">
-                    {currentBuktiIndex + 1}/{buktiArray.length} • Gunakan arrow
-                    atau klik di luar untuk menutup
-                  </p>
-                ) : (
-                  <p className="text-sm text-neutral-300">
-                    Klik di luar gambar atau tombol X untuk menutup
-                  </p>
-                )}
+                <p className="text-sm text-neutral-300">
+                  Klik di luar gambar atau tombol X untuk menutup
+                </p>
               </div>
             </div>
           </div>

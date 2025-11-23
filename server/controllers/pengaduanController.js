@@ -38,18 +38,38 @@ export const createPengaduan = async (req, res) => {
       return res.status(400).json({ message: "Pilih item atau isi item baru" });
     }
 
-    let imageUrl = null;
-    let fileId = null;
+    // Handle multiple images upload (max 5 images)
+    let imageUrls = [];
+    let fileIds = [];
 
-    if (req.file) {
-      const uploadResponse = await uploadImage(
-        req.file.buffer,
-        req.file.originalname,
-        "/Pengaduan_Sarpras/Pengaduan"
-      );
-      imageUrl = uploadResponse.url;
-      fileId = uploadResponse.fileId;
+    if (req.files && req.files.length > 0) {
+      // Limit to 5 images
+      const filesToUpload = req.files.slice(0, 5);
+
+      console.log(`📤 Uploading ${filesToUpload.length} images...`);
+
+      // Upload all images
+      for (const file of filesToUpload) {
+        try {
+          const uploadResponse = await uploadImage(
+            file.buffer,
+            file.originalname,
+            "/Pengaduan_Sarpras/Pengaduan"
+          );
+          imageUrls.push(uploadResponse.url);
+          fileIds.push(uploadResponse.fileId);
+        } catch (err) {
+          console.error("Failed to upload image:", err);
+          // Continue with other images even if one fails
+        }
+      }
+
+      console.log(`✅ Successfully uploaded ${imageUrls.length} images`);
     }
+
+    // Convert arrays to JSON strings for database
+    const fotoJson = imageUrls.length > 0 ? JSON.stringify(imageUrls) : null;
+    const fileIdsJson = fileIds.length > 0 ? JSON.stringify(fileIds) : null;
 
     // If user proposes a new item via nama_item_baru, create a temporary item entry
     let final_id_temporary = id_temporary_from_body;
@@ -70,8 +90,8 @@ export const createPengaduan = async (req, res) => {
     await createPengaduanService({
       nama_pengaduan,
       deskripsi,
-      foto: imageUrl,
-      file_id: fileId,
+      foto: fotoJson,
+      foto_ids: fileIdsJson,
       id_user,
       // Pass null when item is proposed and awaiting approval
       id_item: id_item || null,
@@ -199,35 +219,91 @@ export const updatePengaduanStatus = async (req, res) => {
     let gambar_bukti_url = null;
     let gambar_bukti_fileId = null;
 
-    // 🔥 HAPUS bagian set tgl_selesai manual - biarkan trigger yang handle
-    if (status === "Selesai" && req.file) {
-      try {
-        const uploadResponse = await uploadImage(
-          req.file.buffer,
-          req.file.originalname,
-          "/Pengaduan_Sarpras/Bukti_Selesai"
-        );
-        gambar_bukti_url = uploadResponse.url;
-        gambar_bukti_fileId = uploadResponse.fileId;
+    // 🔥 Handle multiple bukti images (max 5)
+    if (status === "Selesai" && req.files && req.files.length > 0) {
+      let buktiUrls = [];
+      let buktiFileIds = [];
+      const filesToUpload = req.files.slice(0, 5);
+
+      console.log(`📤 Uploading ${filesToUpload.length} bukti images...`);
+
+      for (const file of filesToUpload) {
+        try {
+          const uploadResponse = await uploadImage(
+            file.buffer,
+            file.originalname,
+            "/Pengaduan_Sarpras/Bukti_Selesai"
+          );
+          buktiUrls.push(uploadResponse.url);
+          buktiFileIds.push(uploadResponse.fileId);
+        } catch (err) {
+          console.error("⚠️ Gagal upload bukti image:", err.message);
+        }
+      }
+
+      if (buktiUrls.length > 0) {
+        gambar_bukti_url = JSON.stringify(buktiUrls);
+        gambar_bukti_fileId = JSON.stringify(buktiFileIds);
         console.log(
-          "✅ Gambar bukti selesai berhasil diupload:",
-          uploadResponse.url
+          `✅ Successfully uploaded ${buktiUrls.length} bukti images`
         );
-      } catch (err) {
-        console.error("⚠️ Gagal upload gambar bukti:", err.message);
-        return res
-          .status(500)
-          .json({ message: "Gagal upload gambar bukti penyelesaian" });
       }
     }
 
     // Hapus foto pengaduan lama dari ImageKit jika status Selesai/Ditolak
-    if (["Selesai", "Ditolak"].includes(status) && oldData.file_id) {
-      try {
-        await deleteImage(oldData.file_id);
-        console.log("Foto pengaduan dihapus dari ImageKit:", oldData.file_id);
-      } catch (err) {
-        console.error("Gagal hapus foto dari ImageKit:", err.message);
+    if (["Selesai", "Ditolak"].includes(status)) {
+      // Handle multiple images (foto_ids is JSON array)
+      if (oldData.foto_ids) {
+        try {
+          const fileIds = JSON.parse(oldData.foto_ids);
+          for (const fileId of fileIds) {
+            try {
+              await deleteImage(fileId);
+              console.log("Foto pengaduan dihapus dari ImageKit:", fileId);
+            } catch (err) {
+              console.error("Gagal hapus foto dari ImageKit:", err.message);
+            }
+          }
+        } catch (parseErr) {
+          console.error("Error parsing foto_ids:", parseErr);
+          // Fallback: try old file_id column
+          if (oldData.file_id) {
+            try {
+              await deleteImage(oldData.file_id);
+              console.log(
+                "Foto pengaduan dihapus dari ImageKit (fallback):",
+                oldData.file_id
+              );
+            } catch (err) {
+              console.error("Gagal hapus foto dari ImageKit:", err.message);
+            }
+          }
+        }
+      }
+
+      // Also delete old bukti selesai images if re-uploading
+      if (req.files && req.files.length > 0 && oldData.bukti_selesai_ids) {
+        try {
+          const oldBuktiIds = JSON.parse(oldData.bukti_selesai_ids);
+          for (const fileId of oldBuktiIds) {
+            try {
+              await deleteImage(fileId);
+              console.log("Bukti lama dihapus dari ImageKit:", fileId);
+            } catch (err) {
+              console.error("Gagal hapus bukti lama:", err.message);
+            }
+          }
+        } catch (parseErr) {
+          console.error("Error parsing bukti_selesai_ids:", parseErr);
+          // Fallback
+          if (oldData.file_id_bukti_selesai) {
+            try {
+              await deleteImage(oldData.file_id_bukti_selesai);
+            } catch (err) {
+              console.error("Gagal hapus bukti lama:", err.message);
+            }
+          }
+        }
       }
     }
 

@@ -42,7 +42,7 @@ const Tambah = () => {
   const [id_item, setItem] = useState("");
   const [id_kategori, setKategori] = useState("");
   const [id_lokasi, setLokasi] = useState("");
-  const [foto, setFoto] = useState(null);
+  const [foto, setFoto] = useState([]); // Changed to array for multiple images
   const [items, setItems] = useState([]);
   const [kategoriLokasi, setKategoriLokasi] = useState([]);
   const [allLokasi, setAllLokasiList] = useState([]);
@@ -124,16 +124,16 @@ const Tambah = () => {
     setCustomItem("");
   }, [id_lokasi, items]);
 
-  // Create a preview URL for the selected image (and clean it up when changed)
-  const previewUrl = useMemo(
-    () => (foto ? URL.createObjectURL(foto) : null),
-    [foto]
-  );
+  // Create preview URLs for selected images
+  const previewUrls = useMemo(() => {
+    return foto.map((file) => URL.createObjectURL(file));
+  }, [foto]);
+
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [previewUrl]);
+  }, [previewUrls]);
 
   const resetForm = () => {
     setNama("");
@@ -141,10 +141,37 @@ const Tambah = () => {
     setKategori("");
     setItem("");
     setLokasi("");
-    setFoto(null);
+    setFoto([]);
     setCustomItem("");
     setShowCustomItem(false);
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleAddImages = (files) => {
+    const newFiles = Array.from(files).filter((f) =>
+      f.type?.startsWith("image/")
+    );
+    const totalFiles = foto.length + newFiles.length;
+
+    if (totalFiles > 5) {
+      toast.error("Maksimal 5 gambar");
+      setAlerts((prev) => [
+        ...prev,
+        {
+          type: "destructive",
+          title: "Terlalu banyak gambar",
+          description: "Maksimal 5 gambar per pengaduan",
+          duration: 3000,
+        },
+      ]);
+      return;
+    }
+
+    setFoto((prev) => [...prev, ...newFiles]);
+  };
+
+  const handleRemoveImage = (index) => {
+    setFoto((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (e) => {
@@ -287,39 +314,53 @@ const Tambah = () => {
                 <div className="flex items-center justify-between mb-3">
                   <label className="flex items-center gap-2 text-sm font-medium text-neutral-300">
                     <ImagePlus className="text-orange-400 size-4" /> Foto
-                    (opsional)
+                    (opsional) - Max 5
                   </label>
-                  {foto && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFoto(null);
-                        if (fileRef.current) fileRef.current.value = "";
-                      }}
-                      className="inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-neutral-200"
-                      title="Hapus foto"
-                    >
-                      <X className="size-3.5" /> Hapus
-                    </button>
+                  {foto.length > 0 && (
+                    <span className="text-xs text-neutral-400">
+                      {foto.length}/5 gambar
+                    </span>
                   )}
                 </div>
-                <div
-                  onClick={() => fileRef.current?.click()}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const f = e.dataTransfer.files?.[0];
-                    if (f && f.type?.startsWith("image/")) setFoto(f);
-                  }}
-                  className="relative grid transition-colors border-2 border-dashed rounded-lg cursor-pointer place-items-center border-neutral-700 hover:border-orange-500/60 hover:bg-neutral-900/60 min-h-64"
-                >
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt="preview"
-                      className="object-contain w-full p-2 max-h-72"
-                    />
-                  ) : (
+
+                {/* Image Previews Grid */}
+                {foto.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {previewUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={url}
+                          alt={`preview ${index + 1}`}
+                          className="object-cover w-full h-32 border rounded-lg border-neutral-700"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="absolute top-1 right-1 p-1 rounded-full bg-red-500/90 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Hapus gambar"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                        <div className="absolute bottom-1 left-1 px-1.5 py-0.5 text-[10px] bg-black/70 text-white rounded">
+                          {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Upload Area */}
+                {foto.length < 5 && (
+                  <div
+                    onClick={() => fileRef.current?.click()}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const files = e.dataTransfer.files;
+                      handleAddImages(files);
+                    }}
+                    className="relative grid transition-colors border-2 border-dashed rounded-lg cursor-pointer place-items-center border-neutral-700 hover:border-orange-500/60 hover:bg-neutral-900/60 min-h-48"
+                  >
                     <div className="p-6 text-center">
                       <div className="grid mx-auto mb-3 border rounded-full size-10 bg-neutral-800/70 border-neutral-700 place-items-center text-neutral-300">
                         <ImagePlus className="size-5" />
@@ -340,17 +381,20 @@ const Tambah = () => {
                         </Button>
                       </div>
                     </div>
-                  )}
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setFoto(e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
-                </div>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => handleAddImages(e.target.files)}
+                      className="hidden"
+                    />
+                  </div>
+                )}
+
                 <p className="mt-3 text-xs text-neutral-500">
-                  Format gambar .jpg, .png, atau .webp. Maks ~2MB.
+                  Format gambar .jpg, .png, atau .webp. Maks 2MB per gambar. Max
+                  5 gambar.
                 </p>
               </div>
             </div>
@@ -592,11 +636,11 @@ const Tambah = () => {
                   <span className="text-xs text-neutral-100">{deskripsi}</span>
                 </div>
               )}
-              {foto && (
+              {foto.length > 0 && (
                 <div className="pt-2 border-t border-neutral-700">
                   <span className="block mb-1 text-neutral-400">Foto:</span>
                   <span className="text-xs text-green-400">
-                    ✓ Foto terlampir
+                    ✓ {foto.length} gambar terlampir
                   </span>
                 </div>
               )}

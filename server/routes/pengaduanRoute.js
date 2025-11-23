@@ -16,7 +16,7 @@ router.get("/report", authMiddleware(["admin"]), getPengaduanReport);
 router.post(
   "/",
   authMiddleware(["pengguna"]),
-  uploadImage("foto"),
+  uploadImage("foto", 5), // Support up to 5 images
   createPengaduan
 );
 
@@ -27,7 +27,7 @@ router.get("/", authMiddleware(["petugas", "admin"]), getAllPengaduan);
 router.patch(
   "/:id/status",
   authMiddleware(["petugas", "admin"]),
-  uploadImage("gambar"), // Support upload gambar bukti
+  uploadImage("gambar", 5), // Support up to 5 bukti images
   updatePengaduanStatus
 );
 

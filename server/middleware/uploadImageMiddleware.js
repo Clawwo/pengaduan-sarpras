@@ -18,12 +18,24 @@ const upload = multer({
   fileFilter,
 });
 
-const uploadImage = (fieldName) => {
+const uploadImage = (fieldName, maxCount = 1) => {
   return (req, res, next) => {
-    upload.single(fieldName)(req, res, (err) => {
+    const uploadHandler =
+      maxCount === 1
+        ? upload.single(fieldName)
+        : upload.array(fieldName, maxCount);
+
+    uploadHandler(req, res, (err) => {
       if (err instanceof multer.MulterError) {
         if (err.code === "LIMIT_FILE_SIZE") {
-          return res.status(400).json({ message: "Ukuran file maksimal 2MB" });
+          return res
+            .status(400)
+            .json({ message: "Ukuran file maksimal 2MB per gambar" });
+        }
+        if (err.code === "LIMIT_UNEXPECTED_FILE") {
+          return res
+            .status(400)
+            .json({ message: `Maksimal ${maxCount} gambar` });
         }
         return res.status(400).json({ message: err.message });
       } else if (err) {
